@@ -52,7 +52,13 @@ export async function createPixPayment(token: string, params: {
     }),
   })
   const rawText = await res.text()
-  if (!res.ok) throw new Error(`SyncPay pagamento: ${rawText}`)
-  // Retorna raw para debug — remover depois
-  throw new Error(`SYNCPAY_RESPONSE: ${rawText}`)
+  if (!res.ok) throw new Error(`SyncPay: ${rawText}`)
+
+  // Aceita múltiplas variações de nome de campo da API
+  const data = JSON.parse(rawText) as Record<string, unknown>
+  return {
+    transactionId: String(data.transaction_id ?? data.idTransaction ?? data.id ?? ''),
+    pixCode: String(data.payment_code ?? data.paymentCode ?? data.paymentcode ?? data.pix_code ?? ''),
+    pixQrCode: String(data.paymentCodeBase64 ?? data.payment_code_base64 ?? data.qr_code ?? ''),
+  }
 }
