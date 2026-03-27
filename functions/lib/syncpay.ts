@@ -6,9 +6,12 @@ export async function getSyncPayToken(clientId: string, clientSecret: string): P
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
   })
-  if (!res.ok) throw new Error(`SyncPay auth: ${await res.text()}`)
-  const { access_token } = await res.json() as { access_token: string }
-  return access_token
+  const raw = await res.text()
+  if (!res.ok) throw new Error(`SyncPay auth (${res.status}): ${raw}`)
+  const data = JSON.parse(raw) as Record<string, unknown>
+  const token = String(data.access_token ?? '')
+  if (!token) throw new Error(`SyncPay auth sem token: ${raw}`)
+  return token
 }
 
 export async function createPixPayment(token: string, params: {
@@ -53,9 +56,5 @@ export async function createPixPayment(token: string, params: {
     }),
   })
   const rawText = await res.text()
-  if (!res.ok) throw new Error(`SyncPay: ${rawText}`)
-
-  const data = JSON.parse(rawText) as Record<string, unknown>
-  // Debug temporário: retorna as chaves da resposta
-  throw new Error(`KEYS: ${Object.keys(data).join(',')} | RAW: ${rawText.slice(0, 400)}`)
+  throw new Error(`STATUS:${res.status} RAW:${rawText.slice(0, 500)}`)
 }
