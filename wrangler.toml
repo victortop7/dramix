@@ -1,0 +1,12 @@
+name = "dramix"
+compatibility_date = "2024-11-01"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dramix-db"
+database_id = "COLOQUE_O_ID_DO_D1_AQUI"
+
+[[r2_buckets]]
+binding = "VIDEOS"
+bucket_name = "dramix-videos"
