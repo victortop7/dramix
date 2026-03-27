@@ -8,7 +8,7 @@ const plans = [
   {
     id: 'basic' as const,
     name: 'Básico',
-    price: 'R$ 14,90',
+    price: 'R$ 15,90',
     period: '/mês',
     icon: <Star size={22} style={{ color: 'var(--blue)' }} />,
     description: 'Acesso Completo e Sem Limites.',

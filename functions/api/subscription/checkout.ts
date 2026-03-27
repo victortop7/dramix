@@ -4,7 +4,7 @@ import { getUser } from '../../lib/auth'
 
 // Preços em centavos
 const PLAN_PRICES: Record<string, number> = {
-  basic: 1490,
+  basic: 1590,
   premium: 2990,
 }
 
