@@ -29,9 +29,10 @@ export async function createPixPayment(token: string, params: {
     },
     body: JSON.stringify({
       amount: params.amount,
+      ip: '127.0.0.1',
       traceable: true,
       postbackUrl: params.postbackUrl,
-      pix: { expiresInDays: 1 },
+      pix: { expiresInDays: '1' },
       items: [{
         title: params.description,
         quantity: 1,
