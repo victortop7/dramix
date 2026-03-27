@@ -24,6 +24,9 @@ export async function createPixPayment(token: string, params: {
   postbackUrl: string
   description: string
 }): Promise<{ transactionId: string; pixCode: string; pixQrCode: string }> {
+  // amount em centavos (inteiro)
+  const amountCents = Math.round(params.amount * 100)
+
   const res = await fetch(`${BASE_URL}/v1/gateway/api`, {
     method: 'POST',
     headers: {
@@ -31,8 +34,8 @@ export async function createPixPayment(token: string, params: {
       'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({
-      amount: params.amount,
-      ip: '127.0.0.1',
+      amount: amountCents,
+      ip: '177.0.0.1',
       traceable: true,
       postbackUrl: params.postbackUrl,
       pix: { expiresInDays: '1' },
@@ -40,7 +43,7 @@ export async function createPixPayment(token: string, params: {
         title: params.description,
         quantity: 1,
         tangible: false,
-        unitPrice: params.amount,
+        unitPrice: amountCents,
       }],
       customer: {
         name: params.name,
@@ -56,5 +59,18 @@ export async function createPixPayment(token: string, params: {
     }),
   })
   const rawText = await res.text()
-  throw new Error(`STATUS:${res.status} RAW:${rawText.slice(0, 500)}`)
+  if (!res.ok) throw new Error(`SyncPay pagamento (${res.status}): ${rawText}`)
+
+  const data = JSON.parse(rawText) as Record<string, unknown>
+
+  // Se version >= 0 é erro do SyncPay
+  if (typeof data.version === 'number' && !data.paymentCode && !data.payment_code && !data.pix_code) {
+    throw new Error(`SyncPay erro (version ${data.version}): ${rawText}`)
+  }
+
+  return {
+    transactionId: String(data.transaction_id ?? data.idTransaction ?? data.id ?? ''),
+    pixCode: String(data.payment_code ?? data.paymentCode ?? data.paymentcode ?? data.pix_code ?? ''),
+    pixQrCode: String(data.paymentCodeBase64 ?? data.payment_code_base64 ?? data.qrCode ?? ''),
+  }
 }
