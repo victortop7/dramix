@@ -26,7 +26,7 @@ const EMPTY_FORM: DramaForm = {
 }
 
 export default function Admin() {
-  const { user, isAdmin } = useAuth()
+  const { user, isAdmin, isLoading } = useAuth()
   const navigate = useNavigate()
   const [dramas, setDramas] = useState<Drama[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -40,6 +40,7 @@ export default function Admin() {
   const videoInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    if (isLoading) return
     if (!user || !isAdmin()) { navigate('/home'); return }
     Promise.all([
       api.admin.listDramas(),
@@ -50,7 +51,7 @@ export default function Admin() {
       cats.forEach(c => { if (!allCats.find(x => x.id === c.id)) allCats.push({ id: c.id, name: c.name, slug: c.slug, sortOrder: c.sortOrder }) })
       setCategories(allCats)
     }).finally(() => setLoading(false))
-  }, [user, isAdmin, navigate])
+  }, [user, isAdmin, isLoading, navigate])
 
   const openCreate = () => { setForm(EMPTY_FORM); setEditId(null); setShowForm(true) }
   const openEdit = (d: Drama) => {

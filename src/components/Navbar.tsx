@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Play, Heart, Settings, Search, LogOut, User, Crown, Menu, X } from 'lucide-react'
+import { Play, Heart, Settings, Search, LogOut, User, Crown, Menu, X, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const AVATAR_EMOJIS: Record<string, string> = {
@@ -9,7 +9,7 @@ const AVATAR_EMOJIS: Record<string, string> = {
 }
 
 export default function Navbar() {
-  const { user, profile, logout, hasAccess } = useAuth()
+  const { user, profile, logout, hasAccess, isAdmin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -122,6 +122,7 @@ export default function Navbar() {
                     { icon: <Heart size={14} />, label: 'Minha Lista', to: '/minha-lista' },
                     { icon: <Crown size={14} />, label: 'Assinatura', to: '/assinatura' },
                     { icon: <Settings size={14} />, label: 'Configurações', to: '/configuracoes' },
+                    ...(isAdmin() ? [{ icon: <ShieldCheck size={14} />, label: 'Admin', to: '/admin' }] : []),
                   ].map(item => (
                     <Link key={item.to} to={item.to}
                       onClick={() => setUserMenuOpen(false)}
