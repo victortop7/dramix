@@ -24,17 +24,14 @@ export async function createPixPayment(token: string, params: {
   postbackUrl: string
   description: string
 }): Promise<{ transactionId: string; pixCode: string; pixQrCode: string }> {
-  // amount em centavos (inteiro)
-  const amountCents = Math.round(params.amount * 100)
-
-  const res = await fetch(`${BASE_URL}/v1/gateway/api`, {
+  const res = await fetch(`${BASE_URL}/v1/cashin/api`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({
-      amount: amountCents,
+      amount: params.amount,
       ip: '177.0.0.1',
       traceable: true,
       postbackUrl: params.postbackUrl,
@@ -43,7 +40,7 @@ export async function createPixPayment(token: string, params: {
         title: params.description,
         quantity: 1,
         tangible: false,
-        unitPrice: amountCents,
+        unitPrice: params.amount,
       }],
       customer: {
         name: params.name,
@@ -52,20 +49,15 @@ export async function createPixPayment(token: string, params: {
         phone: params.phone.replace(/\D/g, ''),
         externalReference: params.externalReference,
       },
-      metadata: {
-        userEmail: params.email,
-        identificationNumber: params.externalReference,
-      },
     }),
   })
   const rawText = await res.text()
-  if (!res.ok) throw new Error(`SyncPay pagamento (${res.status}): ${rawText}`)
+  if (!res.ok) throw new Error(`SyncPay (${res.status}): ${rawText}`)
 
   const data = JSON.parse(rawText) as Record<string, unknown>
 
-  // Se version >= 0 é erro do SyncPay
   if (typeof data.version === 'number' && !data.paymentCode && !data.payment_code && !data.pix_code) {
-    throw new Error(`SyncPay erro (version ${data.version}): ${rawText}`)
+    throw new Error(`SyncPay erro: ${rawText}`)
   }
 
   return {
