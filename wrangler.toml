@@ -2,11 +2,4 @@ name = "dramix"
 compatibility_date = "2024-11-01"
 pages_build_output_dir = "dist"
 
-[[d1_databases]]
-binding = "DB"
-database_name = "dramix-db"
-database_id = "77e1bedc-9f14-4eb3-8b24-b0533d9f9598"
-
-[[r2_buckets]]
-binding = "VIDEOS"
-bucket_name = "dramix-videos"
+# Bindings configurados no Cloudflare Dashboard
