@@ -7,10 +7,10 @@ export async function getSyncPayToken(clientId: string, clientSecret: string): P
     body: JSON.stringify({ client_id: clientId, client_secret: clientSecret }),
   })
   const raw = await res.text()
-  if (!res.ok) throw new Error(`SyncPay auth (${res.status}): ${raw}`)
+  if (!res.ok) throw new Error(`Auth falhou (${res.status}): ${raw.slice(0, 200)}`)
   const data = JSON.parse(raw) as Record<string, unknown>
   const token = String(data.access_token ?? '')
-  if (!token) throw new Error(`SyncPay auth sem token: ${raw}`)
+  if (!token) throw new Error(`Token não retornado: ${raw.slice(0, 200)}`)
   return token
 }
 
@@ -24,7 +24,7 @@ export async function createPixPayment(token: string, params: {
   postbackUrl: string
   description: string
 }): Promise<{ transactionId: string; pixCode: string; pixQrCode: string }> {
-  const res = await fetch(`${BASE_URL}/v1/cashin/api`, {
+  const res = await fetch(`${BASE_URL}/v1/gateway/api`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -51,13 +51,26 @@ export async function createPixPayment(token: string, params: {
       },
     }),
   })
+
   const rawText = await res.text()
-  if (!res.ok) throw new Error(`SyncPay (${res.status}): ${rawText}`)
 
-  const data = JSON.parse(rawText) as Record<string, unknown>
+  // Se retornou HTML, o endpoint está errado ou não autorizado
+  if (rawText.trimStart().startsWith('<')) {
+    throw new Error(`Endpoint retornou HTML (${res.status}) — verifique as credenciais`)
+  }
 
-  if (typeof data.version === 'number' && !data.paymentCode && !data.payment_code && !data.pix_code) {
-    throw new Error(`SyncPay erro: ${rawText}`)
+  if (!res.ok) throw new Error(`SyncPay (${res.status}): ${rawText.slice(0, 300)}`)
+
+  let data: Record<string, unknown>
+  try {
+    data = JSON.parse(rawText) as Record<string, unknown>
+  } catch {
+    throw new Error(`Resposta inválida: ${rawText.slice(0, 300)}`)
+  }
+
+  // version < 0 ou version = 2 = erro do SyncPay
+  if (data.version !== undefined && !data.paymentCode && !data.payment_code && !data.pix_code && !data.paymentcode) {
+    throw new Error(`SyncPay rejeitou (version=${data.version}). Verifique o payload.`)
   }
 
   return {
