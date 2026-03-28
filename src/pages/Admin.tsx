@@ -204,7 +204,7 @@ export default function Admin() {
   )
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh' }} onClick={() => setCatPopover(null)}>
       <Navbar />
       <div style={{ paddingTop: 'calc(var(--navbar-h) + 32px)' }} className="px-4 md:px-8 pb-16">
 
@@ -297,8 +297,9 @@ export default function Admin() {
                       ))}
                     </div>
                     {catPopover === d.id && (
-                      <div className="absolute z-50 mt-2 p-3 rounded-xl flex flex-wrap gap-1.5"
-                        style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', minWidth: 260, left: 0, top: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                      <div className="absolute z-50 p-3 rounded-xl flex flex-wrap gap-1.5"
+                        onClick={e => e.stopPropagation()}
+                        style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', minWidth: 280, left: 0, bottom: '100%', marginBottom: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
                         {categories.map(c => {
                           const has = d.categories.some(dc => dc.id === c.id)
                           return (
