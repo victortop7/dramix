@@ -149,16 +149,18 @@ export default function Navbar() {
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Link to="/login" className="btn-secondary text-sm py-2 px-4">Entrar</Link>
-            <Link to="/register" className="btn-primary text-sm py-2 px-4">Criar conta</Link>
+            <Link to="/login" className="btn-secondary text-sm py-1.5 px-3">Entrar</Link>
+            <Link to="/register" className="btn-primary text-sm py-1.5 px-3 hidden sm:flex">Criar conta</Link>
           </div>
         )}
 
-        {/* Mobile menu */}
-        <button className="md:hidden p-2" onClick={() => setMenuOpen(v => !v)}
-          style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        {/* Mobile menu — só quando logado */}
+        {user && (
+          <button className="md:hidden p-2" onClick={() => setMenuOpen(v => !v)}
+            style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }}>
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        )}
       </div>
 
       {/* Mobile menu dropdown */}
