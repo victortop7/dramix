@@ -223,6 +223,13 @@ export default function Admin() {
         {categories.length > 0 && (
           <div className="mb-4 fade-up">
             <div className="flex flex-wrap gap-2 items-center">
+              {selectedCat && (
+                <button onClick={() => setSelectedCat(null)}
+                  className="text-xs px-3 py-1.5 rounded-full"
+                  style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                  ✕ Todos
+                </button>
+              )}
               {categories.map(c => (
                 <button key={c.id}
                   onClick={() => setSelectedCat(selectedCat === c.id ? null : c.id)}
@@ -238,7 +245,7 @@ export default function Admin() {
               ))}
               {selectedCat && (
                 <button
-                  onClick={() => { void bulkAddCategory(selectedCat); setSelectedCat(null) }}
+                  onClick={() => { void bulkAddCategory(selectedCat) }}
                   className="text-xs px-3 py-1.5 rounded-full transition-all"
                   style={{ background: 'var(--green-dim)', border: '1px solid var(--green)', color: 'var(--green)', cursor: 'pointer' }}>
                   ✓ Adicionar a todos
@@ -247,7 +254,8 @@ export default function Admin() {
             </div>
             {selectedCat && (
               <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-                Clique em "Adicionar a todos" para atribuir <strong style={{ color: 'var(--text-dim)' }}>{categories.find(c => c.id === selectedCat)?.name}</strong> a todos os dramas de uma vez
+                Mostrando dramas de <strong style={{ color: 'var(--accent-light)' }}>{categories.find(c => c.id === selectedCat)?.name}</strong>
+                {' '}— {dramas.filter(d => d.categories.some(c => c.id === selectedCat)).length} de {dramas.length}
               </p>
             )}
           </div>
@@ -268,7 +276,7 @@ export default function Admin() {
               </tr>
             </thead>
             <tbody>
-              {dramas.map(d => (
+              {dramas.filter(d => !selectedCat || d.categories.some(c => c.id === selectedCat)).map(d => (
                 <tr key={d.id}
                   style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-alt)')}
