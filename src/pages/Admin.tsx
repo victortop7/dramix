@@ -67,14 +67,36 @@ export default function Admin() {
   }
 
   const uploadFile = async (file: File, type: 'thumbnail' | 'video'): Promise<string> => {
-    setUploadProgress(`Fazendo upload de ${type === 'thumbnail' ? 'capa' : 'vídeo'}... (pode demorar para vídeos grandes)`)
-    const { uploadUrl, publicUrl } = await api.admin.getUploadUrl(file.name, file.type)
-    const res = await fetch(uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    })
-    if (!res.ok) throw new Error(`Erro no upload: ${res.status}`)
+    if (type === 'thumbnail') {
+      // Imagem pequena — upload direto pelo Worker
+      setUploadProgress('Fazendo upload de capa...')
+      const { uploadUrl, publicUrl } = await api.admin.getUploadUrl(file.name, file.type)
+      const token = localStorage.getItem('dramix_token') ?? ''
+      const res = await fetch(uploadUrl, {
+        method: 'PUT', body: file,
+        headers: { 'Content-Type': file.type, 'Authorization': `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error(`Erro no upload da capa: ${res.status}`)
+      setUploadProgress('')
+      return publicUrl
+    }
+
+    // Vídeo grande — upload em chunks via multipart R2
+    const CHUNK = 50 * 1024 * 1024 // 50MB por chunk
+    const { uploadId, key, publicUrl } = await api.admin.startUpload(file.name)
+    const total = Math.ceil(file.size / CHUNK)
+    const parts: Array<{ partNumber: number; etag: string }> = []
+
+    for (let i = 0; i < total; i++) {
+      const chunk = file.slice(i * CHUNK, Math.min((i + 1) * CHUNK, file.size))
+      const pct = Math.round(((i + 1) / total) * 100)
+      setUploadProgress(`Enviando vídeo... ${pct}% (${i + 1}/${total})`)
+      const part = await api.admin.uploadChunk(key, uploadId, i + 1, chunk)
+      parts.push({ partNumber: part.partNumber, etag: part.etag })
+    }
+
+    setUploadProgress('Finalizando upload...')
+    await api.admin.completeUpload(key, uploadId, parts)
     setUploadProgress('')
     return publicUrl
   }

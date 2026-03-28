@@ -100,6 +100,24 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ filename, contentType }),
       }),
+    startUpload: (filename: string) =>
+      request<{ uploadId: string; key: string; publicUrl: string }>('/admin/upload-start', {
+        method: 'POST',
+        body: JSON.stringify({ filename }),
+      }),
+    uploadChunk: (key: string, uploadId: string, partNumber: number, chunk: Blob) => {
+      const token = getToken()
+      return fetch(`${BASE}/admin/upload-chunk?key=${encodeURIComponent(key)}&uploadId=${encodeURIComponent(uploadId)}&partNumber=${partNumber}`, {
+        method: 'POST',
+        body: chunk,
+        headers: { 'Authorization': `Bearer ${token ?? ''}`, 'Content-Type': 'application/octet-stream' },
+      }).then(r => r.json()) as Promise<{ etag: string; partNumber: number }>
+    },
+    completeUpload: (key: string, uploadId: string, parts: Array<{ partNumber: number; etag: string }>) =>
+      request<{ success: boolean }>('/admin/upload-complete', {
+        method: 'POST',
+        body: JSON.stringify({ key, uploadId, parts }),
+      }),
     listDramas: () => request<{ dramas: import('../types').Drama[] }>('/admin/dramas'),
   },
 
