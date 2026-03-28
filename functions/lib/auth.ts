@@ -47,5 +47,5 @@ export async function getUser(request: Request, env: Env) {
   if (!payload) return null
 
   const user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(payload.sub).first()
-  return user as { id: string; name: string; email: string; plan: string; is_admin: number } | null
+  return user as { id: string; name: string; email: string; plan: string; is_admin: number; free_seconds_used: number } | null
 }

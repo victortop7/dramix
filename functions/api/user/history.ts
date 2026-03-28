@@ -53,6 +53,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
     }
     if (!profileId || !dramaId) return json({ error: 'Params inválidos' }, 400)
 
+    // busca progresso anterior para calcular delta
+    const prev = await env.DB.prepare(
+      'SELECT progress_seconds FROM watch_history WHERE profile_id = ? AND drama_id = ?'
+    ).bind(profileId, dramaId).first() as { progress_seconds: number } | null
+
     await env.DB.prepare(`
       INSERT INTO watch_history (profile_id, drama_id, progress_seconds, watched_at)
       VALUES (?, ?, ?, datetime('now'))
@@ -60,6 +65,20 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
         progress_seconds = excluded.progress_seconds,
         watched_at = excluded.watched_at
     `).bind(profileId, dramaId, progressSeconds).run()
+
+    // acumula segundos no usuário free
+    const delta = progressSeconds - (prev?.progress_seconds ?? 0)
+    if (delta > 0) {
+      const profile = await env.DB.prepare('SELECT user_id FROM profiles WHERE id = ?').bind(profileId).first() as { user_id: string } | null
+      if (profile) {
+        const usr = await env.DB.prepare('SELECT plan FROM users WHERE id = ?').bind(profile.user_id).first() as { plan: string } | null
+        if (usr?.plan === 'free') {
+          await env.DB.prepare(
+            'UPDATE users SET free_seconds_used = MIN(free_seconds_used + ?, 1800) WHERE id = ?'
+          ).bind(delta, profile.user_id).run()
+        }
+      }
+    }
 
     return json({ success: true })
   } catch (e) {

@@ -73,7 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasAccess = () => {
     if (!user) return false
     if (user.isAdmin) return true
-    return user.plan === 'basic' || user.plan === 'premium'
+    if (user.plan === 'basic' || user.plan === 'premium') return true
+    // plano free: 30 minutos grátis
+    return (user.freeSecondsUsed ?? 0) < 1800
   }
 
   const isAdmin = () => user?.isAdmin === true

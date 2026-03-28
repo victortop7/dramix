@@ -10,6 +10,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
       user: {
         id: user.id, name: user.name, email: user.email,
         plan: user.plan, isAdmin: user.is_admin === 1,
+        freeSecondsUsed: user.free_seconds_used ?? 0,
       },
     })
   } catch (e) {

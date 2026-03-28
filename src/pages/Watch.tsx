@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw } from 'lucide-react'
+import { ArrowLeft, Play, Pause, Volume2, VolumeX, Maximize, RotateCcw, Crown } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 import type { Drama } from '../types'
 import { formatDuration } from '../lib/format'
+
+const FREE_LIMIT = 1800 // 30 minutos em segundos
 
 export default function Watch() {
   const { id } = useParams<{ id: string }>()
@@ -21,6 +23,10 @@ export default function Watch() {
   const [showControls, setShowControls] = useState(true)
   const [controlsTimeout, setControlsTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
   const saveInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [showPaywall, setShowPaywall] = useState(false)
+  const freeSecondsUsed = user?.freeSecondsUsed ?? 0
+  const isFree = user?.plan === 'free' && !user?.isAdmin
+  const freeSecondsLeft = Math.max(0, FREE_LIMIT - freeSecondsUsed)
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
@@ -142,13 +148,61 @@ export default function Watch() {
           style={{ maxHeight: '100vh', maxWidth: '100%', width: 'auto', height: '100%', cursor: 'pointer' }}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
-          onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime ?? 0)}
+          onTimeUpdate={() => {
+            const t = videoRef.current?.currentTime ?? 0
+            setCurrentTime(t)
+            if (isFree && t >= freeSecondsLeft) {
+              videoRef.current?.pause()
+              setShowPaywall(true)
+            }
+          }}
           onLoadedMetadata={() => setDuration(videoRef.current?.duration ?? 0)}
           onEnded={() => setPlaying(false)}
           muted={muted}
           playsInline
         />
       </div>
+
+      {/* Banner trial (free) */}
+      {isFree && !showPaywall && freeSecondsLeft > 0 && freeSecondsLeft <= FREE_LIMIT && (
+        <div className="absolute top-14 left-0 right-0 flex justify-center z-10 pointer-events-none">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
+            style={{ background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}>
+            <Crown size={13} style={{ color: '#f59e0b' }} />
+            {Math.ceil(freeSecondsLeft / 60)} min grátis restantes — assine para assistir sem limites
+          </div>
+        </div>
+      )}
+
+      {/* Paywall modal */}
+      {showPaywall && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(8px)' }}>
+          <div className="flex flex-col items-center gap-5 px-8 py-10 rounded-2xl max-w-sm w-full text-center"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center"
+              style={{ background: 'var(--accent-dim)', border: '1px solid var(--accent)' }}>
+              <Crown size={28} style={{ color: '#f59e0b' }} />
+            </div>
+            <div>
+              <p className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>
+                Seus 30 minutos grátis acabaram
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
+                Assine o Dramix e continue assistindo todos os dramas sem limites.
+              </p>
+            </div>
+            <button className="btn-primary w-full py-3 text-sm font-semibold"
+              onClick={() => navigate('/assinatura')}>
+              Ver planos e assinar
+            </button>
+            <button className="text-xs" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+              onClick={() => navigate(-1)}>
+              Voltar para o início
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Controls */}
       <div className="z-10 px-4 pb-6 pt-4 transition-opacity duration-300"

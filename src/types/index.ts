@@ -6,6 +6,7 @@ export interface User {
   plan: 'free' | 'basic' | 'premium'
   planExpiresAt?: string
   isAdmin: boolean
+  freeSecondsUsed: number
   createdAt: string
 }
 
