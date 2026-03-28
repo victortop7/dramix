@@ -123,32 +123,32 @@ export default function HeroSection({ dramas }: Props) {
           </p>
         )}
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-4">
           <button onClick={() => navigate(`/watch/${drama.id}`)} className="btn-primary text-sm px-6 py-3">
             <Play size={16} fill="white" /> Assistir Agora
           </button>
           <button onClick={() => navigate(`/drama/${drama.id}`)} className="btn-secondary text-sm px-6 py-3">
             Ver Detalhes
           </button>
-
-          {/* Dots + arrows — só com múltiplos */}
-          {dramas.length > 1 && (
-            <div className="flex items-center gap-2 ml-2">
-              <button onClick={prev} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ChevronLeft size={16} />
-              </button>
-              <div className="flex gap-1.5">
-                {dramas.map((_, i) => (
-                  <button key={i} onClick={() => goTo(i)}
-                    style={{ width: i === index ? 20 : 6, height: 6, borderRadius: 3, border: 'none', cursor: 'pointer', transition: 'all 0.3s', background: i === index ? 'var(--accent)' : 'rgba(255,255,255,0.3)' }} />
-                ))}
-              </div>
-              <button onClick={next} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          )}
         </div>
+
+        {/* Dots + arrows — linha separada */}
+        {dramas.length > 1 && (
+          <div className="flex items-center gap-2">
+            <button onClick={prev} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ChevronLeft size={16} />
+            </button>
+            <div className="flex gap-1.5">
+              {dramas.map((_, i) => (
+                <button key={i} onClick={() => goTo(i)}
+                  style={{ width: i === index ? 20 : 6, height: 6, borderRadius: 3, border: 'none', cursor: 'pointer', transition: 'all 0.3s', background: i === index ? 'var(--accent)' : 'rgba(255,255,255,0.3)' }} />
+              ))}
+            </div>
+            <button onClick={next} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
