@@ -36,6 +36,17 @@ export default function Watch() {
       .finally(() => setLoading(false))
   }, [id, user, navigate, hasAccess])
 
+  // Retomar de onde parou
+  useEffect(() => {
+    if (!profile || !id) return
+    api.history.list(profile.id).then(({ dramas: h }) => {
+      const saved = h.find(d => d.id === id)
+      if (saved && saved.progressSeconds > 10 && videoRef.current) {
+        videoRef.current.currentTime = saved.progressSeconds
+      }
+    }).catch(() => {})
+  }, [profile, id])
+
   // Auto-save progress
   useEffect(() => {
     if (!profile || !id) return

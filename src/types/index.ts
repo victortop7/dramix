@@ -44,6 +44,19 @@ export interface DramaWithProgress extends Drama {
   progressSeconds?: number
 }
 
+export interface WatchProgress {
+  id: string
+  title: string
+  thumbnailUrl?: string
+  videoUrl?: string
+  durationSeconds?: number
+  progressSeconds: number
+  watchedAt: string
+  isDubbed: boolean
+  isNew: boolean
+  isExclusive: boolean
+}
+
 export interface FeaturedDrama extends Drama {
   tags?: string[]
 }

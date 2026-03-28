@@ -75,6 +75,8 @@ export const api = {
   },
 
   history: {
+    list: (profileId: string) =>
+      request<{ dramas: import('../types').WatchProgress[] }>(`/user/history?profileId=${profileId}`),
     save: (profileId: string, dramaId: string, progressSeconds: number) =>
       request<{ success: boolean }>('/user/history', {
         method: 'POST',

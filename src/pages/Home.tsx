@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download } from 'lucide-react'
+import { Download, Play } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import HeroSection from '../components/HeroSection'
 import CategoryRow from '../components/CategoryRow'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
-import type { FeaturedDrama, CategoryWithDramas } from '../types'
+import type { FeaturedDrama, CategoryWithDramas, WatchProgress } from '../types'
 
 export default function Home() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
   const [featured, setFeatured] = useState<FeaturedDrama[]>([])
   const [categories, setCategories] = useState<CategoryWithDramas[]>([])
+  const [continueWatching, setContinueWatching] = useState<WatchProgress[]>([])
   const [loading, setLoading] = useState(true)
   const [pwaPrompt, setPwaPrompt] = useState(true)
 
@@ -25,6 +26,13 @@ export default function Home() {
       setCategories(cats)
     }).finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!profile) return
+    api.history.list(profile.id)
+      .then(({ dramas }) => setContinueWatching(dramas.filter(d => d.progressSeconds > 10)))
+      .catch(() => {})
+  }, [profile])
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
@@ -97,6 +105,43 @@ export default function Home() {
           🔍 Buscar dramas...
         </button>
       </div>
+
+      {/* Continue assistindo */}
+      {continueWatching.length > 0 && (
+        <div className="px-4 md:px-8 mt-6 mb-2">
+          <h2 className="text-base font-bold mb-4" style={{ color: 'var(--text)' }}>Continue assistindo</h2>
+          <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
+            {continueWatching.map(d => {
+              const pct = d.durationSeconds ? Math.round((d.progressSeconds / d.durationSeconds) * 100) : 0
+              return (
+                <div key={d.id} className="flex-shrink-0 cursor-pointer relative"
+                  style={{ width: 150 }}
+                  onClick={() => navigate(`/watch/${d.id}`)}>
+                  <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: '2/3' }}>
+                    {d.thumbnailUrl
+                      ? <img src={d.thumbnailUrl} alt={d.title} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full" style={{ background: 'var(--surface-alt)' }} />
+                    }
+                    {/* Overlay play */}
+                    <div className="absolute inset-0 flex items-center justify-center"
+                      style={{ background: 'rgba(0,0,0,0.35)' }}>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ background: 'rgba(255,255,255,0.2)' }}>
+                        <Play size={18} fill="white" color="white" />
+                      </div>
+                    </div>
+                    {/* Barra de progresso */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                      <div className="h-full" style={{ width: `${pct}%`, background: 'var(--accent)' }} />
+                    </div>
+                  </div>
+                  <p className="text-xs mt-2 line-clamp-2" style={{ color: 'var(--text-dim)' }}>{d.title}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Category rows */}
       <div className="pb-16 mt-6">
