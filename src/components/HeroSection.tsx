@@ -54,10 +54,9 @@ export default function HeroSection({ dramas }: Props) {
 
       {/* Card flutuante direita */}
       {drama.thumbnailUrl && (
-        <div className="absolute right-8 top-1/2 hidden md:block"
+        <div className="absolute hidden md:flex items-center justify-center"
           style={{
-            transform: 'translateY(-50%)',
-            width: 180,
+            right: 0, top: 0, bottom: 0, width: '40%',
             opacity: visible ? 1 : 0,
             transition: 'opacity 0.3s ease',
           }}>
@@ -65,19 +64,21 @@ export default function HeroSection({ dramas }: Props) {
             key={drama.id + '-card'}
             src={drama.thumbnailUrl}
             alt={drama.title}
-            className="w-full object-cover"
             style={{
+              height: '78%',
+              width: 'auto',
               aspectRatio: '2/3',
-              borderRadius: 16,
-              boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
-              border: '2px solid rgba(255,255,255,0.08)',
+              objectFit: 'cover',
+              borderRadius: 20,
+              boxShadow: '0 32px 80px rgba(0,0,0,0.8)',
+              border: '2px solid rgba(255,255,255,0.1)',
             }}
           />
         </div>
       )}
 
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end pb-10 px-4 md:px-10 md:pr-64"
+      <div className="absolute inset-0 flex flex-col justify-end pb-10 px-4 md:px-10 md:pr-[42%]"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease' }}>
 
         {drama.tags && drama.tags.length > 0 && (
