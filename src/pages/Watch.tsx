@@ -102,6 +102,7 @@ export default function Watch() {
         style={{
           opacity: showControls ? 1 : 0,
           background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)',
+          position: 'absolute', top: 0, left: 0, right: 0,
         }}>
         <button onClick={() => navigate(-1)}
           style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}>
@@ -110,26 +111,28 @@ export default function Watch() {
         <span className="text-sm font-semibold text-white">{drama.title}</span>
       </div>
 
-      {/* Video */}
-      <video
-        ref={videoRef}
-        src={drama.videoUrl}
-        className="flex-1 w-full object-contain cursor-pointer"
-        onClick={togglePlay}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime ?? 0)}
-        onLoadedMetadata={() => setDuration(videoRef.current?.duration ?? 0)}
-        onEnded={() => setPlaying(false)}
-        muted={muted}
-        playsInline
-      />
+      {/* Video — centralizado em formato retrato */}
+      <div className="flex-1 flex items-center justify-center" onClick={togglePlay}>
+        <video
+          ref={videoRef}
+          src={drama.videoUrl}
+          style={{ maxHeight: '100vh', maxWidth: '100%', width: 'auto', height: '100%', cursor: 'pointer' }}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime ?? 0)}
+          onLoadedMetadata={() => setDuration(videoRef.current?.duration ?? 0)}
+          onEnded={() => setPlaying(false)}
+          muted={muted}
+          playsInline
+        />
+      </div>
 
       {/* Controls */}
       <div className="z-10 px-4 pb-6 pt-4 transition-opacity duration-300"
         style={{
           opacity: showControls ? 1 : 0,
           background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
+          position: 'absolute', bottom: 0, left: 0, right: 0,
         }}>
 
         {/* Progress bar */}
