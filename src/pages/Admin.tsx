@@ -69,11 +69,10 @@ export default function Admin() {
   const uploadFile = async (file: File, type: 'thumbnail' | 'video'): Promise<string> => {
     setUploadProgress(`Fazendo upload de ${type === 'thumbnail' ? 'capa' : 'vídeo'}... (pode demorar para vídeos grandes)`)
     const { uploadUrl, publicUrl } = await api.admin.getUploadUrl(file.name, file.type)
-    const token = localStorage.getItem('dramix_token') ?? ''
     const res = await fetch(uploadUrl, {
       method: 'PUT',
       body: file,
-      headers: { 'Content-Type': file.type, 'Authorization': `Bearer ${token}` },
+      headers: { 'Content-Type': file.type },
     })
     if (!res.ok) throw new Error(`Erro no upload: ${res.status}`)
     setUploadProgress('')
