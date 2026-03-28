@@ -7,6 +7,7 @@ async function req(apiKey: string, method: string, path: string, body?: unknown)
     headers: {
       'Content-Type': 'application/json',
       'access_token': apiKey,
+      'User-Agent': 'Dramix/1.0',
     },
     body: body ? JSON.stringify(body) : undefined,
   })
