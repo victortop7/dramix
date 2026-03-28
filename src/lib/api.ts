@@ -48,6 +48,10 @@ export const api = {
       request<{ success: boolean }>(`/user/profiles/${id}`, { method: 'DELETE' }),
   },
 
+  categories: {
+    list: () => request<{ categories: import('../types').Category[] }>('/categories'),
+  },
+
   dramas: {
     featured: () => request<{ dramas: import('../types').FeaturedDrama[]; drama: import('../types').FeaturedDrama | null }>('/dramas/featured'),
     byCategory: (slug?: string) =>

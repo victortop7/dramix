@@ -47,14 +47,12 @@ export default function Admin() {
     if (!user || !isAdmin()) { navigate('/home'); return }
     Promise.all([
       api.admin.listDramas(),
-      api.dramas.byCategory(),
+      api.categories.list(),
       api.admin.getFeatured(),
     ]).then(([{ dramas: d }, { categories: cats }, { featuredIds: ids }]) => {
       setDramas(d)
       setFeaturedIds(ids)
-      const allCats: Category[] = []
-      cats.forEach(c => { if (!allCats.find(x => x.id === c.id)) allCats.push({ id: c.id, name: c.name, slug: c.slug, sortOrder: c.sortOrder }) })
-      setCategories(allCats)
+      setCategories(cats)
     }).finally(() => setLoading(false))
   }, [user, isAdmin, isLoading, navigate])
 
