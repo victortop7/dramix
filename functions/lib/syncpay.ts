@@ -31,7 +31,7 @@ export async function createPixPayment(token: string, params: {
       'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify({
-      amount: params.amount,
+      amount: Math.round(params.amount * 100),
       ip: '177.0.0.1',
       traceable: true,
       postbackUrl: params.postbackUrl,
@@ -40,7 +40,7 @@ export async function createPixPayment(token: string, params: {
         title: params.description,
         quantity: 1,
         tangible: false,
-        unitPrice: params.amount,
+        unitPrice: Math.round(params.amount * 100),
       }],
       customer: {
         name: params.name,
@@ -48,6 +48,15 @@ export async function createPixPayment(token: string, params: {
         cpf: params.cpf.replace(/\D/g, ''),
         phone: params.phone.replace(/\D/g, ''),
         externalReference: params.externalReference,
+        address: {
+          street: 'Rua não informada',
+          number: '0',
+          complement: '',
+          neighborhood: 'Centro',
+          city: 'São Paulo',
+          state: 'SP',
+          zipcode: '01310000',
+        },
       },
     }),
   })
