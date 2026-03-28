@@ -37,6 +37,7 @@ export default function Admin() {
   const [editId, setEditId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [uploadProgress, setUploadProgress] = useState('')
+  const [catPopover, setCatPopover] = useState<string | null>(null)
   const thumbInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
@@ -163,6 +164,19 @@ export default function Admin() {
     }))
   }
 
+  const toggleDramaCategory = async (dramaId: string, catId: string, hasIt: boolean) => {
+    const drama = dramas.find(d => d.id === dramaId)
+    if (!drama) return
+    const newCatIds = hasIt
+      ? drama.categories.filter(c => c.id !== catId).map(c => c.id)
+      : [...drama.categories.map(c => c.id), catId]
+    await api.admin.updateDrama(dramaId, { categoryIds: newCatIds } as never)
+    setDramas(v => v.map(d => d.id === dramaId
+      ? { ...d, categories: categories.filter(c => newCatIds.includes(c.id)) }
+      : d
+    ))
+  }
+
   if (loading) return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <Navbar />
@@ -221,18 +235,45 @@ export default function Admin() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {d.categories.slice(0, 2).map(c => (
+                  <td className="px-4 py-3" style={{ position: 'relative' }}>
+                    <div className="flex flex-wrap gap-1 cursor-pointer" onClick={() => setCatPopover(catPopover === d.id ? null : d.id)}>
+                      {d.categories.length === 0 && (
+                        <span className="text-xs px-2 py-0.5 rounded border border-dashed"
+                          style={{ color: 'var(--text-muted)', borderColor: 'var(--border)' }}>+ categoria</span>
+                      )}
+                      {d.categories.map(c => (
                         <span key={c.id} className="text-xs px-2 py-0.5 rounded"
-                          style={{ background: 'var(--surface-hover)', color: 'var(--text-dim)' }}>
+                          style={{ background: 'var(--accent-dim)', color: 'var(--accent-light)', border: '1px solid var(--accent)' }}>
                           {c.name}
                         </span>
                       ))}
-                      {d.categories.length > 2 && (
-                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>+{d.categories.length - 2}</span>
-                      )}
                     </div>
+                    {catPopover === d.id && (
+                      <div className="absolute z-50 mt-2 p-3 rounded-xl flex flex-wrap gap-1.5"
+                        style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', minWidth: 260, left: 0, top: '100%', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                        {categories.map(c => {
+                          const has = d.categories.some(dc => dc.id === c.id)
+                          return (
+                            <button key={c.id}
+                              onClick={e => { e.stopPropagation(); void toggleDramaCategory(d.id, c.id, has) }}
+                              className="text-xs px-2.5 py-1 rounded-full transition-all"
+                              style={{
+                                background: has ? 'var(--accent-dim)' : 'var(--surface)',
+                                border: has ? '1px solid var(--accent)' : '1px solid var(--border)',
+                                color: has ? 'var(--accent-light)' : 'var(--text-dim)',
+                                cursor: 'pointer',
+                              }}>
+                              {has ? '✓ ' : ''}{c.name}
+                            </button>
+                          )
+                        })}
+                        <button onClick={e => { e.stopPropagation(); setCatPopover(null) }}
+                          className="text-xs px-2 py-1 rounded-full w-full mt-1"
+                          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                          Fechar
+                        </button>
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm" style={{ color: 'var(--text-dim)', fontFamily: 'var(--mono)' }}>
                     {formatViews(d.views)}
