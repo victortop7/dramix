@@ -1,15 +1,17 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, Crown, Star, ArrowLeft, Copy, CheckCheck, X, QrCode, CreditCard } from 'lucide-react'
+import { Check, Crown, Star, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { api } from '../lib/api'
+
+const CHECKOUT_URLS: Record<string, string> = {
+  basic: 'https://syncpagamentoseguro.com/checkout/a16778d7-027b-49dc-b6c0-f8ecd8575b1f+a1677c23-fea6-40d3-bb33-d37372e6ca2b',
+  premium: 'https://syncpagamentoseguro.com/checkout/a1677b5c-b9c0-42a0-8607-dfc1097fb6ed+a1678152-5fdc-4d0a-a41f-adcbb2c0c483',
+}
 
 const plans = [
   {
     id: 'basic' as const,
     name: 'Básico',
     price: 'R$ 15,90',
-    priceNum: 15.90,
     period: '/mês',
     icon: <Star size={22} style={{ color: 'var(--blue)' }} />,
     description: 'Acesso Completo e Sem Limites.',
@@ -25,7 +27,6 @@ const plans = [
     id: 'premium' as const,
     name: 'Premium',
     price: 'R$ 29,90',
-    priceNum: 29.90,
     period: '/mês',
     icon: <Crown size={22} style={{ color: '#f59e0b' }} />,
     description: 'Acesso Completo, Sem Limites e todos os Benefícios Exclusivos.',
@@ -40,87 +41,16 @@ const plans = [
   },
 ]
 
-type Step = 'method' | 'form' | 'pix'
-
-interface PixData {
-  pixCode: string
-  pixQrCode: string
-  planName: string
-  price: string
-}
-
-const formatCpf = (v: string) => {
-  const n = v.replace(/\D/g, '').slice(0, 11)
-  if (n.length <= 3) return n
-  if (n.length <= 6) return `${n.slice(0,3)}.${n.slice(3)}`
-  if (n.length <= 9) return `${n.slice(0,3)}.${n.slice(3,6)}.${n.slice(6)}`
-  return `${n.slice(0,3)}.${n.slice(3,6)}.${n.slice(6,9)}-${n.slice(9)}`
-}
-
-const formatPhone = (v: string) => {
-  const n = v.replace(/\D/g, '').slice(0, 11)
-  if (n.length <= 2) return n
-  if (n.length <= 7) return `(${n.slice(0,2)}) ${n.slice(2)}`
-  return `(${n.slice(0,2)}) ${n.slice(2,7)}-${n.slice(7)}`
-}
-
 export default function Subscription() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
-  const [selectedPlan, setSelectedPlan] = useState<typeof plans[0] | null>(null)
-  const [step, setStep] = useState<Step>('method')
-  const [cpf, setCpf] = useState('')
-  const [phone, setPhone] = useState((user as any)?.whatsapp ?? '')
-  const [loading, setLoading] = useState(false)
-  const [pixData, setPixData] = useState<PixData | null>(null)
-  const [copied, setCopied] = useState(false)
-  const [error, setError] = useState('')
-
-  const openPlan = (plan: typeof plans[0]) => {
+  const handleSubscribe = (planId: 'basic' | 'premium') => {
     if (!user) { navigate('/login'); return }
-    setSelectedPlan(plan)
-    setStep('method')
-    setError('')
-    setCpf('')
-  }
-
-  const closeModal = () => {
-    setSelectedPlan(null)
-    setPixData(null)
-    setError('')
-  }
-
-  const generatePix = async () => {
-    if (!selectedPlan || !user) return
-    const rawCpf = cpf.replace(/\D/g, '')
-    const rawPhone = phone.replace(/\D/g, '')
-    if (rawCpf.length !== 11) { setError('CPF inválido — deve ter 11 dígitos'); return }
-    if (rawPhone.length < 10) { setError('WhatsApp inválido'); return }
-
-    setLoading(true)
-    setError('')
-    try {
-      const data = await api.subscription.createPix(selectedPlan.id, rawCpf, rawPhone)
-      setPixData({
-        pixCode: data.pixCode,
-        pixQrCode: data.pixQrCode,
-        planName: selectedPlan.name,
-        price: selectedPlan.price,
-      })
-      setStep('pix')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao gerar PIX')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const copyPix = async () => {
-    if (!pixData?.pixCode) return
-    await navigator.clipboard.writeText(pixData.pixCode)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 3000)
+    const url = CHECKOUT_URLS[planId]
+    // Pré-preenche o email do usuário no checkout
+    const checkoutUrl = `${url}?email=${encodeURIComponent(user.email)}`
+    window.open(checkoutUrl, '_blank')
   }
 
   return (
@@ -171,7 +101,7 @@ export default function Subscription() {
                 </li>
               ))}
             </ul>
-            <button onClick={() => openPlan(plan)}
+            <button onClick={() => handleSubscribe(plan.id)}
               className="w-full py-3 rounded-xl font-semibold text-sm text-white"
               style={{ ...plan.buttonStyle, border: 'none', cursor: 'pointer' }}>
               Assinar {plan.name}
@@ -181,164 +111,8 @@ export default function Subscription() {
       </div>
 
       <p className="text-center text-xs mt-8" style={{ color: 'var(--text-muted)' }}>
-        Pagamento via PIX. Acesso liberado automaticamente após confirmação.
+        Você será redirecionado para a página de pagamento seguro. Após o pagamento, atualize esta página para liberar seu acesso.
       </p>
-
-      {/* Modal overlay */}
-      {selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)' }}>
-          <div className="w-full max-w-sm rounded-2xl overflow-hidden"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4"
-              style={{ borderBottom: '1px solid var(--border)' }}>
-              <div>
-                <h3 className="font-bold text-base" style={{ color: 'var(--text)' }}>
-                  {step === 'method' && 'Como você quer pagar?'}
-                  {step === 'form' && 'Pagamento via PIX'}
-                  {step === 'pix' && 'Pagamento via PIX'}
-                </h3>
-                {step === 'method' && (
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>Escolha entre PIX ou Cartão.</p>
-                )}
-                {step === 'form' && (
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                    Nome e E-mail já vêm da sua conta. Informe seu CPF e o WhatsApp, depois clique em <strong>Gerar PIX</strong>.
-                  </p>
-                )}
-                {step === 'pix' && pixData && (
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>
-                    <strong style={{ color: 'var(--text)' }}>{user?.name}</strong>, após o pagamento volte para esta página e aguarde alguns segundos que sua conta já será liberada automaticamente.
-                  </p>
-                )}
-              </div>
-              <button onClick={closeModal}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0, marginLeft: 12 }}>
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Step: method */}
-            {step === 'method' && (
-              <div className="p-6 flex flex-col gap-3">
-                <div className="rounded-xl px-4 py-3 mb-1"
-                  style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)' }}>
-                  <p className="font-semibold text-sm" style={{ color: 'var(--text)' }}>{selectedPlan.name}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-dim)' }}>{selectedPlan.price}/mês</p>
-                </div>
-                <button onClick={() => setStep('form')}
-                  className="w-full py-3 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-2"
-                  style={{ background: 'var(--accent)', border: 'none', cursor: 'pointer' }}>
-                  <QrCode size={16} /> PIX Único
-                </button>
-                <button
-                  className="w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
-                  style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text-dim)', cursor: 'not-allowed', opacity: 0.6 }}
-                  disabled>
-                  <CreditCard size={16} /> Cartão de Crédito <span className="text-xs">(em breve)</span>
-                </button>
-              </div>
-            )}
-
-            {/* Step: form */}
-            {step === 'form' && (
-              <div className="p-6 flex flex-col gap-3">
-                <div>
-                  <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--text-muted)' }}>DADOS DA CONTA</label>
-                  <div className="flex flex-col gap-2">
-                    <div>
-                      <label className="text-xs mb-1 block" style={{ color: 'var(--text-dim)' }}>Nome</label>
-                      <input value={user?.name ?? ''} readOnly className="input w-full text-sm"
-                        style={{ opacity: 0.7, cursor: 'default' }} />
-                    </div>
-                    <div>
-                      <label className="text-xs mb-1 block" style={{ color: 'var(--text-dim)' }}>E-mail</label>
-                      <input value={user?.email ?? ''} readOnly className="input w-full text-sm"
-                        style={{ opacity: 0.7, cursor: 'default' }} />
-                    </div>
-                    <div>
-                      <label className="text-xs mb-1 block" style={{ color: 'var(--text-dim)' }}>CPF <span style={{ color: 'var(--red)' }}>*</span></label>
-                      <input
-                        type="text"
-                        placeholder="000.000.000-00"
-                        value={cpf}
-                        onChange={e => setCpf(formatCpf(e.target.value))}
-                        className="input w-full text-sm"
-                        maxLength={14}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs mb-1 block" style={{ color: 'var(--text-dim)' }}>WhatsApp <span style={{ color: 'var(--red)' }}>*</span></label>
-                      <input
-                        type="text"
-                        placeholder="(00) 00000-0000"
-                        value={phone}
-                        onChange={e => setPhone(formatPhone(e.target.value))}
-                        className="input w-full text-sm"
-                        maxLength={15}
-                      />
-                    </div>
-                  </div>
-                </div>
-                {error && <p className="text-xs" style={{ color: 'var(--red)' }}>{error}</p>}
-                <button
-                  onClick={() => void generatePix()}
-                  disabled={loading}
-                  className="w-full py-3 rounded-xl font-semibold text-sm text-white mt-1"
-                  style={{
-                    background: 'var(--accent)',
-                    border: 'none',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.7 : 1,
-                  }}>
-                  {loading ? 'Gerando PIX...' : 'Gerar PIX'}
-                </button>
-              </div>
-            )}
-
-            {/* Step: pix */}
-            {step === 'pix' && pixData && (
-              <div className="p-6 flex flex-col gap-4">
-                {pixData.pixQrCode && (
-                  <div className="flex justify-center">
-                    <img
-                      src={`data:image/png;base64,${pixData.pixQrCode}`}
-                      alt="QR Code PIX"
-                      style={{ width: 180, height: 180, background: '#fff', padding: 8, borderRadius: 12 }}
-                    />
-                  </div>
-                )}
-                {pixData.pixCode && (
-                  <div>
-                    <p className="text-xs mb-1.5 font-medium" style={{ color: 'var(--text-muted)' }}>PIX copia e cola</p>
-                    <div className="rounded-xl p-3 text-xs mb-2 break-all"
-                      style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text-dim)' }}>
-                      {pixData.pixCode}
-                    </div>
-                    <button
-                      onClick={() => void copyPix()}
-                      className="w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
-                      style={{
-                        background: copied ? 'var(--green-dim)' : 'var(--accent)',
-                        border: copied ? '1px solid var(--green)' : 'none',
-                        color: copied ? 'var(--green)' : '#fff',
-                        cursor: 'pointer',
-                      }}>
-                      {copied ? <CheckCheck size={15} /> : <Copy size={15} />}
-                      {copied ? 'Código Copiado!' : 'Copiar código'}
-                    </button>
-                  </div>
-                )}
-                <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
-                  Assim que o pagamento for confirmado pelo banco, seu plano será liberado automaticamente.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
