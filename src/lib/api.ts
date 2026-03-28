@@ -104,10 +104,10 @@ export const api = {
   },
 
   subscription: {
-    createPix: (plan: 'basic' | 'premium', cpf: string, phone?: string) =>
-      request<{ transactionId: string; pixCode: string; pixQrCode: string }>('/subscription/checkout', {
+    createPix: (plan: 'basic' | 'premium', cpf: string) =>
+      request<{ paymentId: string; pixCode: string; pixQrCode: string }>('/subscription/checkout', {
         method: 'POST',
-        body: JSON.stringify({ plan, cpf, phone }),
+        body: JSON.stringify({ plan, cpf }),
       }),
   },
 }

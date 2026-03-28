@@ -1,7 +1,7 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 import type { Env } from '../../lib/types'
 import { getUser } from '../../lib/auth'
-import { getSyncPayToken, createPixPayment } from '../../lib/syncpay'
+import { createPixCharge } from '../../lib/asaas'
 
 const PLAN_PRICES: Record<string, number> = {
   basic: 15.90,
@@ -15,39 +15,28 @@ const PLAN_NAMES: Record<string, string> = {
 
 export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
   try {
-    const user = await getUser(request, env)
+    const user = await getUser(request as unknown as Request, env)
     if (!user) return json({ error: 'Não autenticado' }, 401)
 
-    const { plan, cpf, phone } = await request.json() as { plan: string; cpf: string; phone?: string }
+    const { plan, cpf } = await request.json() as { plan: string; cpf: string }
     if (!plan || !PLAN_PRICES[plan]) return json({ error: 'Plano inválido' }, 400)
     if (!cpf) return json({ error: 'CPF é obrigatório' }, 400)
 
-    const token = await getSyncPayToken(env.SYNCPAY_CLIENT_ID, env.SYNCPAY_CLIENT_SECRET)
-
     const externalRef = `${user.id}:${plan}`
-    const postbackUrl = 'https://dramix.pages.dev/api/subscription/webhook'
 
-    const payment = await createPixPayment(token, {
-      amount: PLAN_PRICES[plan],
+    const charge = await createPixCharge(env.ASAAS_API_KEY, {
       name: user.name,
       email: user.email,
       cpf,
-      phone: phone ?? (user as any).whatsapp ?? '00000000000',
-      externalReference: externalRef,
-      postbackUrl,
+      amount: PLAN_PRICES[plan],
       description: PLAN_NAMES[plan],
+      externalReference: externalRef,
     })
 
-    const subId = crypto.randomUUID()
-    await env.DB.prepare(`
-      INSERT INTO subscriptions (id, user_id, plan, status, syncpay_id, amount_cents)
-      VALUES (?, ?, ?, 'pending', ?, ?)
-    `).bind(subId, user.id, plan, payment.transactionId, Math.round(PLAN_PRICES[plan] * 100)).run()
-
     return json({
-      transactionId: payment.transactionId,
-      pixCode: payment.pixCode,
-      pixQrCode: payment.pixQrCode,
+      paymentId: charge.paymentId,
+      pixCode: charge.pixCode,
+      pixQrCode: charge.pixQrCode,
     })
   } catch (e) {
     return json({ error: String(e) }, 500)
@@ -57,5 +46,5 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status, headers: { 'Content-Type': 'application/json' },
-  })
+  }) as unknown as import('@cloudflare/workers-types').Response
 }
