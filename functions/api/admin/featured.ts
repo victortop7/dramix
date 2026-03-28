@@ -6,8 +6,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
   try {
     const user = await getUser(request as unknown as Request, env)
     if (!user?.is_admin) return json({ error: 'Unauthorized' }, 403)
-    const row = await env.DB.prepare('SELECT drama_id FROM featured_drama WHERE id = 1').first() as { drama_id: string } | null
-    return json({ dramaId: row?.drama_id ?? null })
+    const rows = await env.DB.prepare('SELECT id FROM dramas WHERE is_featured = 1').all()
+    const featuredIds = ((rows.results ?? []) as { id: string }[]).map(r => r.id)
+    return json({ featuredIds })
   } catch (e) {
     return json({ error: String(e) }, 500)
   }
@@ -21,12 +22,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
     const { dramaId } = await request.json() as { dramaId: string }
     if (!dramaId) return json({ error: 'dramaId é obrigatório' }, 400)
 
-    await env.DB.prepare(`
-      INSERT OR REPLACE INTO featured_drama (id, drama_id, updated_at)
-      VALUES (1, ?, datetime('now'))
-    `).bind(dramaId).run()
+    const current = await env.DB.prepare('SELECT is_featured FROM dramas WHERE id = ?').bind(dramaId).first() as { is_featured: number } | null
+    const newVal = current?.is_featured === 1 ? 0 : 1
+    await env.DB.prepare('UPDATE dramas SET is_featured = ? WHERE id = ?').bind(newVal, dramaId).run()
 
-    return json({ success: true })
+    return json({ featured: newVal === 1 })
   } catch (e) {
     return json({ error: String(e) }, 500)
   }

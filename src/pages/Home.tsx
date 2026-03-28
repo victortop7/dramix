@@ -11,17 +11,17 @@ import type { FeaturedDrama, CategoryWithDramas } from '../types'
 export default function Home() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [featured, setFeatured] = useState<FeaturedDrama | null>(null)
+  const [featured, setFeatured] = useState<FeaturedDrama[]>([])
   const [categories, setCategories] = useState<CategoryWithDramas[]>([])
   const [loading, setLoading] = useState(true)
   const [pwaPrompt, setPwaPrompt] = useState(true)
 
   useEffect(() => {
     Promise.all([
-      api.dramas.featured().catch(() => ({ drama: null })),
+      api.dramas.featured().catch(() => ({ dramas: [], drama: null })),
       api.dramas.byCategory().catch(() => ({ categories: [] })),
-    ]).then(([{ drama }, { categories: cats }]) => {
-      setFeatured(drama as FeaturedDrama | null)
+    ]).then(([{ dramas: feat }, { categories: cats }]) => {
+      setFeatured((feat ?? []) as FeaturedDrama[])
       setCategories(cats)
     }).finally(() => setLoading(false))
   }, [])
@@ -62,8 +62,8 @@ export default function Home() {
       {/* Hero */}
       {loading ? (
         <div className="skeleton w-full" style={{ height: 'clamp(380px, 55vw, 560px)', marginTop: 'var(--navbar-h)' }} />
-      ) : featured ? (
-        <HeroSection drama={featured} />
+      ) : featured.length > 0 ? (
+        <HeroSection dramas={featured} />
       ) : (
         <div className="w-full flex items-center justify-center"
           style={{ height: 'clamp(380px, 55vw, 560px)', marginTop: 'var(--navbar-h)', background: 'var(--surface)' }}>

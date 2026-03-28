@@ -30,7 +30,7 @@ export default function Admin() {
   const navigate = useNavigate()
   const [dramas, setDramas] = useState<Drama[]>([])
   const [categories, setCategories] = useState<Category[]>([])
-  const [featuredId, setFeaturedId] = useState<string | null>(null)
+  const [featuredIds, setFeaturedIds] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<DramaForm>(EMPTY_FORM)
@@ -47,9 +47,9 @@ export default function Admin() {
       api.admin.listDramas(),
       api.dramas.byCategory(),
       api.admin.getFeatured(),
-    ]).then(([{ dramas: d }, { categories: cats }, { dramaId }]) => {
+    ]).then(([{ dramas: d }, { categories: cats }, { featuredIds: ids }]) => {
       setDramas(d)
-      setFeaturedId(dramaId)
+      setFeaturedIds(ids)
       const allCats: Category[] = []
       cats.forEach(c => { if (!allCats.find(x => x.id === c.id)) allCats.push({ id: c.id, name: c.name, slug: c.slug, sortOrder: c.sortOrder }) })
       setCategories(allCats)
@@ -149,7 +149,9 @@ export default function Admin() {
 
   const setFeatured = async (id: string) => {
     await api.admin.setFeatured(id)
-    setFeaturedId(id)
+    setFeaturedIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    )
   }
 
   const toggleCategory = (id: string) => {
@@ -252,7 +254,7 @@ export default function Admin() {
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--amber)' }}
                         onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-hover)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                        <Star size={14} fill={featuredId === d.id ? 'var(--amber)' : 'none'} />
+                        <Star size={14} fill={featuredIds.includes(d.id) ? 'var(--amber)' : 'none'} />
                       </button>
                       <button onClick={() => openEdit(d)}
                         className="p-1.5 rounded-lg"

@@ -49,7 +49,7 @@ export const api = {
   },
 
   dramas: {
-    featured: () => request<{ drama: import('../types').FeaturedDrama }>('/dramas/featured'),
+    featured: () => request<{ dramas: import('../types').FeaturedDrama[]; drama: import('../types').FeaturedDrama | null }>('/dramas/featured'),
     byCategory: (slug?: string) =>
       request<{ categories: import('../types').CategoryWithDramas[] }>(
         `/dramas/categories${slug ? `?slug=${slug}` : ''}`
@@ -93,7 +93,7 @@ export const api = {
     deleteDrama: (id: string) =>
       request(`/admin/dramas/${id}`, { method: 'DELETE' }),
     getFeatured: () =>
-      request<{ dramaId: string | null }>('/admin/featured'),
+      request<{ featuredIds: string[] }>('/admin/featured'),
     setFeatured: (dramaId: string) =>
       request('/admin/featured', { method: 'POST', body: JSON.stringify({ dramaId }) }),
     getUploadUrl: (filename: string, contentType: string) =>
