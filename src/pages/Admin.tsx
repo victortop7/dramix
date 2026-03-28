@@ -38,6 +38,7 @@ export default function Admin() {
   const [saving, setSaving] = useState(false)
   const [uploadProgress, setUploadProgress] = useState('')
   const [catPopover, setCatPopover] = useState<string | null>(null)
+  const [selectedCat, setSelectedCat] = useState<string | null>(null)
   const thumbInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
@@ -164,6 +165,21 @@ export default function Admin() {
     }))
   }
 
+  const bulkAddCategory = async (catId: string) => {
+    const toUpdate = dramas.filter(d => !d.categories.some(c => c.id === catId))
+    await Promise.all(toUpdate.map(d => {
+      const newIds = [...d.categories.map(c => c.id), catId]
+      return api.admin.updateDrama(d.id, { categoryIds: newIds } as never)
+    }))
+    const cat = categories.find(c => c.id === catId)
+    if (cat) {
+      setDramas(v => v.map(d => d.categories.some(c => c.id === catId)
+        ? d
+        : { ...d, categories: [...d.categories, cat] }
+      ))
+    }
+  }
+
   const toggleDramaCategory = async (dramaId: string, catId: string, hasIt: boolean) => {
     const drama = dramas.find(d => d.id === dramaId)
     if (!drama) return
@@ -204,6 +220,40 @@ export default function Admin() {
             <Plus size={16} /> Novo Drama
           </button>
         </div>
+
+        {/* Barra de categorias */}
+        {categories.length > 0 && (
+          <div className="mb-4 fade-up">
+            <div className="flex flex-wrap gap-2 items-center">
+              {categories.map(c => (
+                <button key={c.id}
+                  onClick={() => setSelectedCat(selectedCat === c.id ? null : c.id)}
+                  className="text-xs px-3 py-1.5 rounded-full transition-all"
+                  style={{
+                    background: selectedCat === c.id ? 'var(--accent-dim)' : 'var(--surface)',
+                    border: selectedCat === c.id ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    color: selectedCat === c.id ? 'var(--accent-light)' : 'var(--text-dim)',
+                    cursor: 'pointer',
+                  }}>
+                  {c.name}
+                </button>
+              ))}
+              {selectedCat && (
+                <button
+                  onClick={() => { void bulkAddCategory(selectedCat); setSelectedCat(null) }}
+                  className="text-xs px-3 py-1.5 rounded-full transition-all"
+                  style={{ background: 'var(--green-dim)', border: '1px solid var(--green)', color: 'var(--green)', cursor: 'pointer' }}>
+                  ✓ Adicionar a todos
+                </button>
+              )}
+            </div>
+            {selectedCat && (
+              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                Clique em "Adicionar a todos" para atribuir <strong style={{ color: 'var(--text-dim)' }}>{categories.find(c => c.id === selectedCat)?.name}</strong> a todos os dramas de uma vez
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Table */}
         <div className="rounded-2xl overflow-hidden fade-up"
