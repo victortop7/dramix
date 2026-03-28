@@ -10,7 +10,19 @@ async function req(apiKey: string, method: string, path: string, body?: unknown)
     },
     body: body ? JSON.stringify(body) : undefined,
   })
-  return res.json() as Promise<Record<string, unknown>>
+  const text = await res.text()
+  let data: Record<string, unknown>
+  try {
+    data = JSON.parse(text)
+  } catch {
+    throw new Error(`Asaas: ${text.slice(0, 200)}`)
+  }
+  if (!res.ok) {
+    const msg = (data.errors as Array<{ description: string }> | undefined)?.[0]?.description
+      ?? data.message ?? String(data)
+    throw new Error(`Asaas ${res.status}: ${msg}`)
+  }
+  return data
 }
 
 export async function createPixCharge(apiKey: string, opts: {
