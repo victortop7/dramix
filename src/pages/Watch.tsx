@@ -80,10 +80,22 @@ export default function Watch() {
   }
 
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      void containerRef.current?.requestFullscreen()
+    const video = videoRef.current as HTMLVideoElement & { webkitEnterFullscreen?: () => void; webkitRequestFullscreen?: () => void }
+    const container = containerRef.current as HTMLDivElement & { webkitRequestFullscreen?: () => void }
+
+    if (!document.fullscreenElement && !(document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement) {
+      // iOS Safari: usa webkitEnterFullscreen no próprio video
+      if (video?.webkitEnterFullscreen) {
+        video.webkitEnterFullscreen()
+      } else if (container?.requestFullscreen) {
+        void container.requestFullscreen()
+      } else if (container?.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen()
+      }
     } else {
-      void document.exitFullscreen()
+      const doc = document as Document & { webkitExitFullscreen?: () => void }
+      if (doc.exitFullscreen) void doc.exitFullscreen()
+      else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen()
     }
   }
 
