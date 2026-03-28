@@ -173,7 +173,7 @@ export default function DramaDetail() {
 
             {!hasAccess() && (
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                Assine a partir de R$14,90/mês para assistir sem limites.
+                Assine a partir de R$15,90/mês para assistir sem limites.
               </p>
             )}
           </div>

@@ -87,7 +87,7 @@ export default function Home() {
             border: '1px solid var(--accent-dim)',
           }}>
           <div>
-            <p className="font-semibold" style={{ color: 'var(--text)' }}>🎬 Acesso ilimitado por R$14,90/mês</p>
+            <p className="font-semibold" style={{ color: 'var(--text)' }}>🎬 Acesso ilimitado por R$15,90/mês</p>
             <p className="text-sm" style={{ color: 'var(--text-dim)' }}>Assista todos os dramas sem interrupções</p>
           </div>
           <button className="btn-primary flex-shrink-0" onClick={() => navigate('/assinatura')}>
