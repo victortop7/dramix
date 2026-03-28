@@ -39,36 +39,45 @@ export default function HeroSection({ dramas }: Props) {
 
       {/* Background image */}
       {drama.thumbnailUrl && (
-        <>
-          <img
-            key={drama.id + '-bg'}
-            src={drama.thumbnailUrl}
-            alt={drama.title}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: 'center 20%', filter: 'brightness(0.45)', transition: 'opacity 0.3s ease', opacity: visible ? 1 : 0 }}
-          />
-          <img
-            key={drama.id + '-poster'}
-            src={drama.thumbnailUrl}
-            alt=""
-            aria-hidden
-            className="absolute right-0 top-0 h-full object-cover hidden md:block"
-            style={{
-              width: '40%', objectPosition: 'top',
-              mask: 'linear-gradient(to right, transparent 0%, black 40%)',
-              WebkitMask: 'linear-gradient(to right, transparent 0%, black 40%)',
-              transition: 'opacity 0.3s ease', opacity: visible ? 1 : 0,
-            }}
-          />
-        </>
+        <img
+          key={drama.id + '-bg'}
+          src={drama.thumbnailUrl}
+          alt={drama.title}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: 'center 20%', filter: 'brightness(0.35)', transition: 'opacity 0.3s ease', opacity: visible ? 1 : 0 }}
+        />
       )}
 
       {/* Gradient overlay */}
       <div className="absolute inset-0"
         style={{ background: 'linear-gradient(to right, rgba(10,10,15,0.98) 35%, rgba(10,10,15,0.6) 65%, rgba(10,10,15,0.2) 100%), linear-gradient(to top, rgba(10,10,15,1) 0%, transparent 40%)' }} />
 
+      {/* Card flutuante direita */}
+      {drama.thumbnailUrl && (
+        <div className="absolute right-8 top-1/2 hidden md:block"
+          style={{
+            transform: 'translateY(-50%)',
+            width: 180,
+            opacity: visible ? 1 : 0,
+            transition: 'opacity 0.3s ease',
+          }}>
+          <img
+            key={drama.id + '-card'}
+            src={drama.thumbnailUrl}
+            alt={drama.title}
+            className="w-full object-cover"
+            style={{
+              aspectRatio: '2/3',
+              borderRadius: 16,
+              boxShadow: '0 24px 64px rgba(0,0,0,0.7)',
+              border: '2px solid rgba(255,255,255,0.08)',
+            }}
+          />
+        </div>
+      )}
+
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end pb-10 px-4 md:px-10"
+      <div className="absolute inset-0 flex flex-col justify-end pb-10 px-4 md:px-10 md:pr-64"
         style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.3s ease' }}>
 
         {drama.tags && drama.tags.length > 0 && (
