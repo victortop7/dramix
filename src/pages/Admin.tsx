@@ -126,12 +126,7 @@ export default function Admin() {
         await api.admin.updateDrama(editId, payload)
         setDramas(v => v.map(d => d.id === editId ? { ...d, ...payload, categories: categories.filter(c => form.categoryIds.includes(c.id)) } : d))
       } else {
-        const fd = new FormData()
-        Object.entries(payload).forEach(([k, v]) => {
-          if (Array.isArray(v)) v.forEach(x => fd.append(k, x))
-          else fd.append(k, String(v))
-        })
-        const result = await api.admin.createDrama(fd) as { drama: Drama }
+        const result = await api.admin.createDrama(payload as unknown as Record<string, unknown>)
         setDramas(v => [result.drama, ...v])
       }
       setShowForm(false)

@@ -83,12 +83,11 @@ export const api = {
   },
 
   admin: {
-    createDrama: (data: FormData) =>
-      fetch(`${BASE}/admin/dramas`, {
+    createDrama: (data: Record<string, unknown>) =>
+      request<{ drama: import('../types').Drama }>('/admin/dramas', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${getToken() ?? ''}` },
-        body: data,
-      }).then(r => r.json()),
+        body: JSON.stringify(data),
+      }),
     updateDrama: (id: string, data: Partial<import('../types').Drama>) =>
       request(`/admin/dramas/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     deleteDrama: (id: string) =>
