@@ -92,6 +92,8 @@ export const api = {
       request(`/admin/dramas/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     deleteDrama: (id: string) =>
       request(`/admin/dramas/${id}`, { method: 'DELETE' }),
+    getFeatured: () =>
+      request<{ dramaId: string | null }>('/admin/featured'),
     setFeatured: (dramaId: string) =>
       request('/admin/featured', { method: 'POST', body: JSON.stringify({ dramaId }) }),
     getUploadUrl: (filename: string, contentType: string) =>
