@@ -51,8 +51,16 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
       await env.DB.batch(stmts)
     }
 
-    const drama = await env.DB.prepare('SELECT * FROM dramas WHERE id = ?').bind(id).first() as Record<string, unknown>
-    return json({ drama: mapDrama({ ...drama, cats_raw: null }) }, 201)
+    const drama = await env.DB.prepare(`
+      SELECT d.*,
+        GROUP_CONCAT(c.id || ':' || c.name || ':' || c.slug, '||') as cats_raw
+      FROM dramas d
+      LEFT JOIN drama_categories dc ON dc.drama_id = d.id
+      LEFT JOIN categories c ON c.id = dc.category_id
+      WHERE d.id = ?
+      GROUP BY d.id
+    `).bind(id).first() as Record<string, unknown>
+    return json({ drama: mapDrama(drama) }, 201)
   } catch (e) {
     return json({ error: String(e) }, 500)
   }
