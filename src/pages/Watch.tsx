@@ -7,10 +7,18 @@ import type { Drama } from '../types'
 import { formatDuration } from '../lib/format'
 
 const FREE_LIMIT = 1800 // 30 minutos em segundos
+const LS_KEY = 'dramix_anon_free_seconds' // localStorage para anônimos
+
+function getAnonUsed(): number {
+  return Math.min(parseInt(localStorage.getItem(LS_KEY) ?? '0', 10) || 0, FREE_LIMIT)
+}
+function saveAnonUsed(s: number) {
+  localStorage.setItem(LS_KEY, String(Math.min(s, FREE_LIMIT)))
+}
 
 export default function Watch() {
   const { id } = useParams<{ id: string }>()
-  const { user, profile, hasAccess } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -26,17 +34,33 @@ export default function Watch() {
   const sessionInterval = useRef<ReturnType<typeof setInterval> | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
 
-  // Segundos do banco + segundos desta sessão (atualiza a cada 1s enquanto assiste)
-  const [liveUsed, setLiveUsed] = useState(user?.freeSecondsUsed ?? 0)
-  const isFree = user?.plan === 'free' && !user?.isAdmin
+  // Usuário logado free OU anônimo — ambos têm trial de 30min
+  const isAnon = !user
+  const isFree = isAnon || (user?.plan === 'free' && !user?.isAdmin)
+  const isPaid = user && (user.plan === 'basic' || user.plan === 'premium' || user.isAdmin)
+
+  const initialUsed = isAnon ? getAnonUsed() : (user?.freeSecondsUsed ?? 0)
+  const [liveUsed, setLiveUsed] = useState(initialUsed)
+  const liveUsedRef = useRef(initialUsed)
+
   const freeLeft = Math.max(0, FREE_LIMIT - liveUsed)
   const freeUsedMin = Math.floor(liveUsed / 60)
   const freeLeftMin = Math.ceil(freeLeft / 60)
 
+  // Carrega o drama (sem exigir login)
   useEffect(() => {
-    if (!user) { navigate('/login'); return }
-    if (!hasAccess()) { navigate('/assinatura'); return }
     if (!id) return
+    // Se já esgotou o trial e não é pago, mostra paywall direto
+    if (isFree && !isPaid && getAnonUsed() >= FREE_LIMIT && !user) {
+      setLoading(false)
+      setShowPaywall(true)
+      return
+    }
+    if (isFree && !isPaid && (user?.freeSecondsUsed ?? 0) >= FREE_LIMIT && user) {
+      setLoading(false)
+      setShowPaywall(true)
+      return
+    }
 
     api.dramas.get(id)
       .then(({ drama: d }) => {
@@ -45,9 +69,9 @@ export default function Watch() {
       })
       .catch(() => navigate('/home'))
       .finally(() => setLoading(false))
-  }, [id, user, navigate, hasAccess])
+  }, [id])
 
-  // Retomar de onde parou
+  // Retomar de onde parou (só para logados)
   useEffect(() => {
     if (!profile || !id) return
     api.history.list(profile.id).then(({ dramas: h }) => {
@@ -58,7 +82,7 @@ export default function Watch() {
     }).catch(() => {})
   }, [profile, id])
 
-  // Auto-save progress a cada 30s
+  // Auto-save progress a cada 30s (só para logados)
   useEffect(() => {
     if (!profile || !id) return
     saveInterval.current = setInterval(() => {
@@ -69,12 +93,9 @@ export default function Watch() {
     return () => { if (saveInterval.current) clearInterval(saveInterval.current) }
   }, [profile, id])
 
-  // ref para acessar liveUsed atualizado dentro de callbacks/intervals
-  const liveUsedRef = useRef(user?.freeSecondsUsed ?? 0)
-
-  // Contador ao vivo + salva no banco a cada 10s (mobile-safe)
+  // Contador ao vivo do trial — salva a cada 10s
   useEffect(() => {
-    if (!isFree) return
+    if (isPaid) return
     let tick = 0
     sessionInterval.current = setInterval(() => {
       if (videoRef.current && !videoRef.current.paused) {
@@ -84,39 +105,45 @@ export default function Watch() {
           if (next >= FREE_LIMIT) {
             videoRef.current?.pause()
             setShowPaywall(true)
-            void api.history.saveFreeTime(FREE_LIMIT)
+            if (isAnon) saveAnonUsed(FREE_LIMIT)
+            else void api.history.saveFreeTime(FREE_LIMIT)
           }
           return next
         })
         tick++
-        // salva no banco a cada 10s
         if (tick % 10 === 0) {
-          void api.history.saveFreeTime(liveUsedRef.current)
+          if (isAnon) saveAnonUsed(liveUsedRef.current)
+          else void api.history.saveFreeTime(liveUsedRef.current)
         }
       }
     }, 1000)
     return () => { if (sessionInterval.current) clearInterval(sessionInterval.current) }
-  }, [isFree])
+  }, [isPaid, isAnon])
 
-  // Salva ao sair — usa ref para pegar valor atualizado
+  // Salva ao sair (beforeunload + pagehide para mobile)
   useEffect(() => {
-    if (!isFree) return
+    if (isPaid) return
     const handleUnload = () => {
-      const token = localStorage.getItem('dramix_token') ?? ''
-      void fetch('/api/user/free-time', {
-        method: 'POST', keepalive: true,
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ seconds: liveUsedRef.current }),
-      })
+      if (isAnon) {
+        saveAnonUsed(liveUsedRef.current)
+      } else {
+        const token = localStorage.getItem('dramix_token') ?? ''
+        void fetch('/api/user/free-time', {
+          method: 'POST', keepalive: true,
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ seconds: liveUsedRef.current }),
+        })
+      }
     }
     window.addEventListener('beforeunload', handleUnload)
-    window.addEventListener('pagehide', handleUnload) // mobile Safari
+    window.addEventListener('pagehide', handleUnload)
     return () => {
       window.removeEventListener('beforeunload', handleUnload)
       window.removeEventListener('pagehide', handleUnload)
-      void api.history.saveFreeTime(liveUsedRef.current)
+      if (isAnon) saveAnonUsed(liveUsedRef.current)
+      else void api.history.saveFreeTime(liveUsedRef.current)
     }
-  }, [isFree])
+  }, [isPaid, isAnon])
 
   const showControlsTemporarily = () => {
     setShowControls(true)
@@ -127,8 +154,7 @@ export default function Watch() {
 
   const togglePlay = () => {
     const v = videoRef.current
-    if (!v) return
-    if (showPaywall) return
+    if (!v || showPaywall) return
     if (v.paused) { void v.play(); setPlaying(true) }
     else { v.pause(); setPlaying(false) }
   }
@@ -143,15 +169,10 @@ export default function Watch() {
   const toggleFullscreen = () => {
     const video = videoRef.current as HTMLVideoElement & { webkitEnterFullscreen?: () => void; webkitRequestFullscreen?: () => void }
     const container = containerRef.current as HTMLDivElement & { webkitRequestFullscreen?: () => void }
-
     if (!document.fullscreenElement && !(document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement) {
-      if (video?.webkitEnterFullscreen) {
-        video.webkitEnterFullscreen()
-      } else if (container?.requestFullscreen) {
-        void container.requestFullscreen()
-      } else if (container?.webkitRequestFullscreen) {
-        container.webkitRequestFullscreen()
-      }
+      if (video?.webkitEnterFullscreen) video.webkitEnterFullscreen()
+      else if (container?.requestFullscreen) void container.requestFullscreen()
+      else if (container?.webkitRequestFullscreen) container.webkitRequestFullscreen()
     } else {
       const doc = document as Document & { webkitExitFullscreen?: () => void }
       if (doc.exitFullscreen) void doc.exitFullscreen()
@@ -163,6 +184,28 @@ export default function Watch() {
     <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#000' }}>
       <div className="w-12 h-12 rounded-full border-2 border-violet-600 border-t-transparent"
         style={{ animation: 'spin 0.8s linear infinite' }} />
+    </div>
+  )
+
+  // Paywall quando trial esgotado mas drama ainda não carregou (ou bloqueio direto)
+  if (showPaywall && !drama) return (
+    <div className="fixed inset-0 flex items-center justify-center" style={{ background: '#000' }}>
+      <div className="flex flex-col items-center gap-5 px-8 py-10 rounded-2xl max-w-sm w-full text-center"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <div className="w-14 h-14 rounded-full flex items-center justify-center"
+          style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid #f59e0b' }}>
+          <Crown size={28} style={{ color: '#f59e0b' }} />
+        </div>
+        <div>
+          <p className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>Seus 30 minutos grátis acabaram</p>
+          <p className="text-sm" style={{ color: 'var(--text-dim)' }}>Assine o Dramix e continue assistindo sem limites.</p>
+        </div>
+        <button className="btn-primary w-full py-3 text-sm font-semibold" onClick={() => navigate('/assinatura')}>
+          Ver planos — a partir de R$15,90/mês
+        </button>
+        <button className="text-xs" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+          onClick={() => navigate('/home')}>Voltar para o início</button>
+      </div>
     </div>
   )
 
@@ -210,19 +253,15 @@ export default function Watch() {
         />
       </div>
 
-      {/* Banner trial (free) — mostra minutos assistidos e restantes */}
-      {isFree && !showPaywall && (
+      {/* Banner trial */}
+      {!isPaid && !showPaywall && (
         <div className="absolute top-14 left-0 right-0 flex justify-center z-10 pointer-events-none">
           <div className="flex items-center gap-3 px-4 py-2 rounded-full text-xs font-semibold"
             style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}>
             <Crown size={13} style={{ color: '#f59e0b' }} />
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>
-              {freeUsedMin} min assistidos
-            </span>
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>{freeUsedMin} min assistidos</span>
             <span style={{ color: 'rgba(255,255,255,0.3)' }}>•</span>
-            <span style={{ color: freeLeft < 300 ? '#ef4444' : '#f59e0b' }}>
-              {freeLeftMin} min restantes
-            </span>
+            <span style={{ color: freeLeft < 300 ? '#ef4444' : '#f59e0b' }}>{freeLeftMin} min restantes</span>
           </div>
         </div>
       )}
@@ -238,21 +277,21 @@ export default function Watch() {
               <Crown size={28} style={{ color: '#f59e0b' }} />
             </div>
             <div>
-              <p className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>
-                Seus 30 minutos grátis acabaram
-              </p>
-              <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
-                Assine o Dramix e continue assistindo todos os dramas sem limites.
-              </p>
+              <p className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>Seus 30 minutos grátis acabaram</p>
+              <p className="text-sm" style={{ color: 'var(--text-dim)' }}>Assine o Dramix e continue assistindo todos os dramas sem limites.</p>
             </div>
-            <button className="btn-primary w-full py-3 text-sm font-semibold"
-              onClick={() => navigate('/assinatura')}>
+            <button className="btn-primary w-full py-3 text-sm font-semibold" onClick={() => navigate('/assinatura')}>
               Ver planos — a partir de R$15,90/mês
             </button>
+            {isAnon && (
+              <button className="w-full py-3 text-sm font-semibold rounded-xl"
+                style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text)', cursor: 'pointer' }}
+                onClick={() => navigate('/register')}>
+                Criar conta grátis
+              </button>
+            )}
             <button className="text-xs" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
-              onClick={() => navigate(-1)}>
-              Voltar para o início
-            </button>
+              onClick={() => navigate(-1)}>Voltar para o início</button>
           </div>
         </div>
       )}
@@ -264,15 +303,8 @@ export default function Watch() {
           background: 'linear-gradient(to top, rgba(0,0,0,0.85), transparent)',
           position: 'absolute', bottom: 0, left: 0, right: 0,
         }}>
-
-        {/* Progress bar */}
         <div className="flex items-center gap-3 mb-2">
-          <input
-            type="range"
-            min={0}
-            max={duration || 1}
-            value={currentTime}
-            onChange={seek}
+          <input type="range" min={0} max={duration || 1} value={currentTime} onChange={seek}
             className="flex-1 h-1 rounded-full appearance-none cursor-pointer"
             style={{
               background: `linear-gradient(to right, var(--accent) ${(currentTime / (duration || 1)) * 100}%, rgba(255,255,255,0.2) 0%)`,
@@ -283,16 +315,12 @@ export default function Watch() {
         <span className="text-xs mb-3 block" style={{ fontFamily: 'var(--mono)', color: 'rgba(255,255,255,0.7)' }}>
           {formatDuration(currentTime)} / {formatDuration(duration)}
         </span>
-
-        {/* Buttons */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={togglePlay}
-              style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}>
+            <button onClick={togglePlay} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}>
               {playing ? <Pause size={24} /> : <Play size={24} fill="white" />}
             </button>
-            <button
-              onClick={() => { if (videoRef.current) videoRef.current.currentTime -= 10 }}
+            <button onClick={() => { if (videoRef.current) videoRef.current.currentTime -= 10 }}
               style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 4 }}>
               <RotateCcw size={18} />
             </button>

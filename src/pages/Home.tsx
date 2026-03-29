@@ -4,6 +4,7 @@ import { Play } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import HeroSection from '../components/HeroSection'
 import CategoryRow from '../components/CategoryRow'
+import WelcomeModal from '../components/WelcomeModal'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
 import type { FeaturedDrama, CategoryWithDramas, WatchProgress } from '../types'
@@ -15,6 +16,14 @@ export default function Home() {
   const [categories, setCategories] = useState<CategoryWithDramas[]>([])
   const [continueWatching, setContinueWatching] = useState<WatchProgress[]>([])
   const [loading, setLoading] = useState(true)
+  const [showWelcome, setShowWelcome] = useState(false)
+
+  // Mostra modal apenas para visitantes sem conta e que ainda não dispensaram
+  useEffect(() => {
+    if (!user && !sessionStorage.getItem('dramix_welcome_dismissed')) {
+      setShowWelcome(true)
+    }
+  }, [user])
 
   useEffect(() => {
     Promise.all([
@@ -33,8 +42,14 @@ export default function Home() {
       .catch(() => {})
   }, [profile])
 
+  const dismissWelcome = () => {
+    sessionStorage.setItem('dramix_welcome_dismissed', '1')
+    setShowWelcome(false)
+  }
+
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
+      {showWelcome && <WelcomeModal onClose={dismissWelcome} />}
       <Navbar />
 
 

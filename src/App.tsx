@@ -1,14 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import WhatsAppChat from './components/WhatsAppChat'
-import type { ReactNode } from 'react'
-
-function ChatWidget() {
-  const { pathname } = useLocation()
-  if (pathname.startsWith('/watch')) return null
-  return <WhatsAppChat />
-}
-
 import Login from './pages/Login'
 import Register from './pages/Register'
 import SelectProfile from './pages/SelectProfile'
@@ -19,6 +11,13 @@ import Watch from './pages/Watch'
 import MyList from './pages/MyList'
 import Search from './pages/Search'
 import Admin from './pages/Admin'
+import type { ReactNode } from 'react'
+
+function ChatWidget() {
+  const { pathname } = useLocation()
+  if (pathname.startsWith('/watch')) return null
+  return <WhatsAppChat />
+}
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth()
@@ -54,9 +53,7 @@ export default function App() {
           <Route path="/assinatura" element={<Subscription />} />
           <Route path="/home" element={<Home />} />
           <Route path="/drama/:id" element={<DramaDetail />} />
-          <Route path="/watch/:id" element={
-            <RequireAuth><Watch /></RequireAuth>
-          } />
+          <Route path="/watch/:id" element={<Watch />} />
           <Route path="/minha-lista" element={
             <RequireAuth><MyList /></RequireAuth>
           } />
