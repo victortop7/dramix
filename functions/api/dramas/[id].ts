@@ -22,21 +22,6 @@ export const onRequestGet: PagesFunction<Env> = async ({ params, env }) => {
   }
 }
 
-// POST /:id/view — incrementar views
-export const onRequestPost: PagesFunction<Env> = async ({ params, env, request }) => {
-  try {
-    // Check if this is a view increment
-    const url = new URL(request.url)
-    if (!url.pathname.endsWith('/view')) return json({ error: 'Not found' }, 404)
-
-    const id = (params.id as string).replace('/view', '')
-    await env.DB.prepare('UPDATE dramas SET views = views + 1 WHERE id = ?').bind(id).run()
-    const row = await env.DB.prepare('SELECT views FROM dramas WHERE id = ?').bind(id).first() as { views: number } | null
-    return json({ views: row?.views ?? 0 })
-  } catch (e) {
-    return json({ error: String(e) }, 500)
-  }
-}
 
 export const onRequestDelete: PagesFunction<Env> = async ({ params, env, request }) => {
   try {
