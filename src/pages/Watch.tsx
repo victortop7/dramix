@@ -23,10 +23,15 @@ export default function Watch() {
   const [showControls, setShowControls] = useState(true)
   const [controlsTimeout, setControlsTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
   const saveInterval = useRef<ReturnType<typeof setInterval> | null>(null)
+  const sessionInterval = useRef<ReturnType<typeof setInterval> | null>(null)
   const [showPaywall, setShowPaywall] = useState(false)
-  const freeSecondsUsed = user?.freeSecondsUsed ?? 0
+
+  // Segundos do banco + segundos desta sessão (atualiza a cada 1s enquanto assiste)
+  const [liveUsed, setLiveUsed] = useState(user?.freeSecondsUsed ?? 0)
   const isFree = user?.plan === 'free' && !user?.isAdmin
-  const freeSecondsLeft = Math.max(0, FREE_LIMIT - freeSecondsUsed)
+  const freeLeft = Math.max(0, FREE_LIMIT - liveUsed)
+  const freeUsedMin = Math.floor(liveUsed / 60)
+  const freeLeftMin = Math.ceil(freeLeft / 60)
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
@@ -53,7 +58,7 @@ export default function Watch() {
     }).catch(() => {})
   }, [profile, id])
 
-  // Auto-save progress
+  // Auto-save progress a cada 30s
   useEffect(() => {
     if (!profile || !id) return
     saveInterval.current = setInterval(() => {
@@ -63,6 +68,24 @@ export default function Watch() {
     }, 30_000)
     return () => { if (saveInterval.current) clearInterval(saveInterval.current) }
   }, [profile, id])
+
+  // Contador ao vivo de segundos assistidos (só para usuários free)
+  useEffect(() => {
+    if (!isFree) return
+    sessionInterval.current = setInterval(() => {
+      if (videoRef.current && !videoRef.current.paused) {
+        setLiveUsed(prev => {
+          const next = prev + 1
+          if (next >= FREE_LIMIT) {
+            videoRef.current?.pause()
+            setShowPaywall(true)
+          }
+          return next
+        })
+      }
+    }, 1000)
+    return () => { if (sessionInterval.current) clearInterval(sessionInterval.current) }
+  }, [isFree])
 
   const showControlsTemporarily = () => {
     setShowControls(true)
@@ -74,6 +97,7 @@ export default function Watch() {
   const togglePlay = () => {
     const v = videoRef.current
     if (!v) return
+    if (showPaywall) return
     if (v.paused) { void v.play(); setPlaying(true) }
     else { v.pause(); setPlaying(false) }
   }
@@ -90,7 +114,6 @@ export default function Watch() {
     const container = containerRef.current as HTMLDivElement & { webkitRequestFullscreen?: () => void }
 
     if (!document.fullscreenElement && !(document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement) {
-      // iOS Safari: usa webkitEnterFullscreen no próprio video
       if (video?.webkitEnterFullscreen) {
         video.webkitEnterFullscreen()
       } else if (container?.requestFullscreen) {
@@ -140,7 +163,7 @@ export default function Watch() {
         <span className="text-sm font-semibold text-white">{drama.title}</span>
       </div>
 
-      {/* Video — centralizado em formato retrato */}
+      {/* Video */}
       <div className="flex-1 flex items-center justify-center" onClick={togglePlay}>
         <video
           ref={videoRef}
@@ -148,14 +171,7 @@ export default function Watch() {
           style={{ maxHeight: '100vh', maxWidth: '100%', width: 'auto', height: '100%', cursor: 'pointer' }}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
-          onTimeUpdate={() => {
-            const t = videoRef.current?.currentTime ?? 0
-            setCurrentTime(t)
-            if (isFree && t >= freeSecondsLeft) {
-              videoRef.current?.pause()
-              setShowPaywall(true)
-            }
-          }}
+          onTimeUpdate={() => setCurrentTime(videoRef.current?.currentTime ?? 0)}
           onLoadedMetadata={() => setDuration(videoRef.current?.duration ?? 0)}
           onEnded={() => setPlaying(false)}
           muted={muted}
@@ -163,13 +179,19 @@ export default function Watch() {
         />
       </div>
 
-      {/* Banner trial (free) */}
-      {isFree && !showPaywall && freeSecondsLeft > 0 && freeSecondsLeft <= FREE_LIMIT && (
+      {/* Banner trial (free) — mostra minutos assistidos e restantes */}
+      {isFree && !showPaywall && (
         <div className="absolute top-14 left-0 right-0 flex justify-center z-10 pointer-events-none">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold"
-            style={{ background: 'rgba(0,0,0,0.75)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}>
+          <div className="flex items-center gap-3 px-4 py-2 rounded-full text-xs font-semibold"
+            style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}>
             <Crown size={13} style={{ color: '#f59e0b' }} />
-            {Math.ceil(freeSecondsLeft / 60)} min grátis restantes — assine para assistir sem limites
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+              {freeUsedMin} min assistidos
+            </span>
+            <span style={{ color: 'rgba(255,255,255,0.3)' }}>•</span>
+            <span style={{ color: freeLeft < 300 ? '#ef4444' : '#f59e0b' }}>
+              {freeLeftMin} min restantes
+            </span>
           </div>
         </div>
       )}
@@ -181,7 +203,7 @@ export default function Watch() {
           <div className="flex flex-col items-center gap-5 px-8 py-10 rounded-2xl max-w-sm w-full text-center"
             style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="w-14 h-14 rounded-full flex items-center justify-center"
-              style={{ background: 'var(--accent-dim)', border: '1px solid var(--accent)' }}>
+              style={{ background: 'rgba(245,158,11,0.15)', border: '1px solid #f59e0b' }}>
               <Crown size={28} style={{ color: '#f59e0b' }} />
             </div>
             <div>
@@ -194,7 +216,7 @@ export default function Watch() {
             </div>
             <button className="btn-primary w-full py-3 text-sm font-semibold"
               onClick={() => navigate('/assinatura')}>
-              Ver planos e assinar
+              Ver planos — a partir de R$15,90/mês
             </button>
             <button className="text-xs" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
               onClick={() => navigate(-1)}>
