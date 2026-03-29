@@ -79,6 +79,7 @@ export default function Watch() {
           if (next >= FREE_LIMIT) {
             videoRef.current?.pause()
             setShowPaywall(true)
+            void api.history.saveFreeTime(FREE_LIMIT) // salva imediatamente quando esgota
           }
           return next
         })
@@ -86,6 +87,25 @@ export default function Watch() {
     }, 1000)
     return () => { if (sessionInterval.current) clearInterval(sessionInterval.current) }
   }, [isFree])
+
+  // Salva free_seconds_used ao sair da página
+  useEffect(() => {
+    if (!isFree) return
+    const handleUnload = () => {
+      const token = localStorage.getItem('dramix_token') ?? ''
+      // keepalive garante envio mesmo durante o unload
+      void fetch('/api/user/free-time', {
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ seconds: liveUsed }),
+      })
+    }
+    window.addEventListener('beforeunload', handleUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload)
+      void api.history.saveFreeTime(liveUsed) // salva ao desmontar o componente
+    }
+  }, [isFree, liveUsed])
 
   const showControlsTemporarily = () => {
     setShowControls(true)

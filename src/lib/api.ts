@@ -86,6 +86,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ profileId, dramaId, progressSeconds }),
       }),
+    saveFreeTime: (seconds: number) =>
+      request<{ success: boolean }>('/user/free-time', {
+        method: 'POST',
+        body: JSON.stringify({ seconds }),
+      }),
   },
 
   admin: {
