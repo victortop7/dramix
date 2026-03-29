@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download, Play } from 'lucide-react'
+import { Play } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import HeroSection from '../components/HeroSection'
 import CategoryRow from '../components/CategoryRow'
@@ -15,7 +15,6 @@ export default function Home() {
   const [categories, setCategories] = useState<CategoryWithDramas[]>([])
   const [continueWatching, setContinueWatching] = useState<WatchProgress[]>([])
   const [loading, setLoading] = useState(true)
-  const [pwaPrompt, setPwaPrompt] = useState(true)
 
   useEffect(() => {
     Promise.all([
@@ -38,34 +37,6 @@ export default function Home() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>
       <Navbar />
 
-      {/* PWA install banner */}
-      {pwaPrompt && (
-        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-30
-          flex items-center gap-3 px-4 py-3 rounded-2xl fade-up"
-          style={{
-            background: 'linear-gradient(135deg, #4f46e5, var(--accent))',
-            boxShadow: '0 8px 32px rgba(124,58,237,0.4)',
-          }}>
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: 'rgba(255,255,255,0.2)' }}>
-            <Download size={18} color="white" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white">Instale o app Dramix</p>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Toque aqui para ter acesso mais rápido</p>
-          </div>
-          <button
-            onClick={() => setPwaPrompt(false)}
-            className="text-xs font-semibold px-3 py-1.5 rounded-lg flex-shrink-0"
-            style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', cursor: 'pointer' }}>
-            Instalar →
-          </button>
-          <button onClick={() => setPwaPrompt(false)}
-            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '0 4px' }}>
-            ×
-          </button>
-        </div>
-      )}
 
       {/* Hero */}
       {loading ? (
