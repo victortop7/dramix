@@ -18,6 +18,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, params, request })
   headers.set('Content-Type', contentType)
   headers.set('Cache-Control', 'public, max-age=86400')
   headers.set('Accept-Ranges', 'bytes')
+  headers.set('Access-Control-Allow-Origin', '*')
+  headers.set('Access-Control-Allow-Headers', 'Range')
+  headers.set('Access-Control-Expose-Headers', 'Content-Range, Content-Length, Accept-Ranges')
 
   if (rangeHeader && object.range) {
     const range = object.range as { offset: number; length: number }
