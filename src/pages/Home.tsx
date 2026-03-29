@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import type { FeaturedDrama, CategoryWithDramas, WatchProgress } from '../types'
 
 export default function Home() {
-  const { user, profile } = useAuth()
+  const { user, profile, isLoading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [featured, setFeatured] = useState<FeaturedDrama[]>([])
   const [categories, setCategories] = useState<CategoryWithDramas[]>([])
@@ -18,12 +18,13 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [showWelcome, setShowWelcome] = useState(false)
 
-  // Mostra modal apenas para visitantes sem conta e que ainda não dispensaram
+  // Mostra modal só para visitantes sem conta, após auth carregar, e só uma vez por dispositivo
   useEffect(() => {
-    if (!user && !sessionStorage.getItem('dramix_welcome_dismissed')) {
+    if (authLoading) return
+    if (!user && !localStorage.getItem('dramix_welcome_dismissed')) {
       setShowWelcome(true)
     }
-  }, [user])
+  }, [authLoading, user])
 
   useEffect(() => {
     Promise.all([
@@ -43,7 +44,7 @@ export default function Home() {
   }, [profile])
 
   const dismissWelcome = () => {
-    sessionStorage.setItem('dramix_welcome_dismissed', '1')
+    localStorage.setItem('dramix_welcome_dismissed', '1')
     setShowWelcome(false)
   }
 
