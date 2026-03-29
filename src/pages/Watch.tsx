@@ -69,43 +69,54 @@ export default function Watch() {
     return () => { if (saveInterval.current) clearInterval(saveInterval.current) }
   }, [profile, id])
 
-  // Contador ao vivo de segundos assistidos (só para usuários free)
+  // ref para acessar liveUsed atualizado dentro de callbacks/intervals
+  const liveUsedRef = useRef(user?.freeSecondsUsed ?? 0)
+
+  // Contador ao vivo + salva no banco a cada 10s (mobile-safe)
   useEffect(() => {
     if (!isFree) return
+    let tick = 0
     sessionInterval.current = setInterval(() => {
       if (videoRef.current && !videoRef.current.paused) {
         setLiveUsed(prev => {
           const next = prev + 1
+          liveUsedRef.current = next
           if (next >= FREE_LIMIT) {
             videoRef.current?.pause()
             setShowPaywall(true)
-            void api.history.saveFreeTime(FREE_LIMIT) // salva imediatamente quando esgota
+            void api.history.saveFreeTime(FREE_LIMIT)
           }
           return next
         })
+        tick++
+        // salva no banco a cada 10s
+        if (tick % 10 === 0) {
+          void api.history.saveFreeTime(liveUsedRef.current)
+        }
       }
     }, 1000)
     return () => { if (sessionInterval.current) clearInterval(sessionInterval.current) }
   }, [isFree])
 
-  // Salva free_seconds_used ao sair da página
+  // Salva ao sair — usa ref para pegar valor atualizado
   useEffect(() => {
     if (!isFree) return
     const handleUnload = () => {
       const token = localStorage.getItem('dramix_token') ?? ''
-      // keepalive garante envio mesmo durante o unload
       void fetch('/api/user/free-time', {
         method: 'POST', keepalive: true,
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ seconds: liveUsed }),
+        body: JSON.stringify({ seconds: liveUsedRef.current }),
       })
     }
     window.addEventListener('beforeunload', handleUnload)
+    window.addEventListener('pagehide', handleUnload) // mobile Safari
     return () => {
       window.removeEventListener('beforeunload', handleUnload)
-      void api.history.saveFreeTime(liveUsed) // salva ao desmontar o componente
+      window.removeEventListener('pagehide', handleUnload)
+      void api.history.saveFreeTime(liveUsedRef.current)
     }
-  }, [isFree, liveUsed])
+  }, [isFree])
 
   const showControlsTemporarily = () => {
     setShowControls(true)
