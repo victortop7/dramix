@@ -36,29 +36,33 @@ export default function Navbar() {
         <span className="text-lg font-bold hidden sm:block" style={{ color: 'var(--text)' }}>Dramix</span>
       </Link>
 
-      {/* Search — desktop */}
-      <div className="hidden md:flex items-center gap-2 flex-1 max-w-xs mx-8">
-        <div className="relative w-full">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2"
-            style={{ color: 'var(--text-muted)' }} />
-          <input
-            type="text"
-            placeholder="Buscar dramas..."
-            className="input pl-9 py-2 text-sm"
-            style={{ height: 38 }}
-            onFocus={() => navigate('/buscar')}
-            readOnly
-          />
+      {/* Search — desktop (só para assinantes) */}
+      {hasAccess() && (
+        <div className="hidden md:flex items-center gap-2 flex-1 max-w-xs mx-8">
+          <div className="relative w-full">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2"
+              style={{ color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              placeholder="Buscar dramas..."
+              className="input pl-9 py-2 text-sm"
+              style={{ height: 38 }}
+              onFocus={() => navigate('/buscar')}
+              readOnly
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-2 md:gap-3">
-        {/* Search mobile */}
-        <Link to="/buscar" className="md:hidden p-2 rounded-lg"
-          style={{ color: 'var(--text-dim)' }}>
-          <Search size={20} />
-        </Link>
+        {/* Search mobile (só para assinantes) */}
+        {hasAccess() && (
+          <Link to="/buscar" className="md:hidden p-2 rounded-lg"
+            style={{ color: 'var(--text-dim)' }}>
+            <Search size={20} />
+          </Link>
+        )}
 
         {/* Minha Lista */}
         {user && (

@@ -82,15 +82,17 @@ export default function Home() {
         </div>
       )}
 
-      {/* Search bar mobile */}
-      <div className="px-4 md:hidden mb-6 mt-4">
-        <button
-          onClick={() => navigate('/buscar')}
-          className="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-left"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-          🔍 Buscar dramas...
-        </button>
-      </div>
+      {/* Search bar mobile (só para assinantes) */}
+      {user && (user.plan === 'basic' || user.plan === 'premium' || user.isAdmin) && (
+        <div className="px-4 md:hidden mb-6 mt-4">
+          <button
+            onClick={() => navigate('/buscar')}
+            className="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-left"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+            🔍 Buscar dramas...
+          </button>
+        </div>
+      )}
 
       {/* Continue assistindo */}
       {continueWatching.length > 0 && (
