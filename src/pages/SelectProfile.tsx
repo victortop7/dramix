@@ -21,7 +21,7 @@ export default function SelectProfile() {
   const [newAvatar, setNewAvatar] = useState('robot')
   const [loading, setLoading] = useState(true)
 
-  const maxProfiles = user?.plan === 'premium' ? 3 : 1
+  const maxProfiles = (user?.plan === 'premium' || user?.isAdmin) ? 3 : 1
 
   useEffect(() => {
     if (!user) { navigate('/login'); return }
