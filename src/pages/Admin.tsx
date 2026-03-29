@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Pencil, Trash2, Star, Upload, X, Check } from 'lucide-react'
+import { Plus, Pencil, Trash2, Star, Upload, X, Check, BarChart2, Film } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -39,6 +39,7 @@ export default function Admin() {
   const [uploadProgress, setUploadProgress] = useState('')
   const [catPopover, setCatPopover] = useState<string | null>(null)
   const [selectedCat, setSelectedCat] = useState<string | null>(null)
+  const [tab, setTab] = useState<'dramas' | 'dashboard'>('dramas')
   const thumbInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
@@ -209,15 +210,110 @@ export default function Admin() {
       <div style={{ paddingTop: 'calc(var(--navbar-h) + 32px)' }} className="px-4 md:px-8 pb-16">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8 fade-up">
+        <div className="flex items-center justify-between mb-6 fade-up">
           <div>
             <h1 className="text-2xl font-bold" style={{ color: 'var(--text)' }}>Painel Admin</h1>
             <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{dramas.length} dramas cadastrados</p>
           </div>
-          <button className="btn-primary" onClick={openCreate}>
-            <Plus size={16} /> Novo Drama
-          </button>
+          {tab === 'dramas' && (
+            <button className="btn-primary" onClick={openCreate}>
+              <Plus size={16} /> Novo Drama
+            </button>
+          )}
         </div>
+
+        {/* Abas */}
+        <div className="flex gap-2 mb-8 fade-up">
+          {([
+            { key: 'dramas', label: 'Dramas', icon: <Film size={15} /> },
+            { key: 'dashboard', label: 'Dashboard', icon: <BarChart2 size={15} /> },
+          ] as const).map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+              style={{
+                background: tab === t.key ? 'var(--accent-dim)' : 'var(--surface)',
+                border: tab === t.key ? '1px solid var(--accent)' : '1px solid var(--border)',
+                color: tab === t.key ? 'var(--accent-light)' : 'var(--text-dim)',
+                cursor: 'pointer',
+              }}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Dashboard */}
+        {tab === 'dashboard' && (() => {
+          const sorted = [...dramas].sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
+          const total = dramas.reduce((s, d) => s + (d.views ?? 0), 0)
+          const maxViews = sorted[0]?.views ?? 1
+          return (
+            <div className="fade-up">
+              {/* Cards resumo */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                {[
+                  { label: 'Total de Views', value: formatViews(total), color: 'var(--accent)' },
+                  { label: 'Dramas Cadastrados', value: String(dramas.length), color: 'var(--green)' },
+                  { label: 'Mais Assistido', value: sorted[0]?.title ?? '-', color: 'var(--amber)', small: true },
+                ].map(c => (
+                  <div key={c.label} className="rounded-xl p-4"
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                    <p className="text-xs uppercase mb-1" style={{ color: 'var(--text-muted)', letterSpacing: '0.05em' }}>{c.label}</p>
+                    <p className={c.small ? 'text-sm font-bold truncate' : 'text-2xl font-bold'} style={{ color: c.color, fontFamily: 'var(--mono)' }}>{c.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Ranking */}
+              <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border)' }}>
+                  <p className="text-sm font-bold" style={{ color: 'var(--text)' }}>Ranking de Visualizações</p>
+                </div>
+                <div>
+                  {sorted.map((d, i) => {
+                    const pct = Math.round(((d.views ?? 0) / maxViews) * 100)
+                    const isTop = i === 0
+                    const isBottom = i === sorted.length - 1 && sorted.length > 1
+                    return (
+                      <div key={d.id} className="flex items-center gap-4 px-5 py-3"
+                        style={{ borderBottom: i < sorted.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                        {/* Posição */}
+                        <span className="text-sm font-bold w-6 text-center flex-shrink-0"
+                          style={{ color: i === 0 ? '#f59e0b' : i === 1 ? '#9ca3af' : i === 2 ? '#cd7c2f' : 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
+                          {i + 1}
+                        </span>
+                        {/* Thumbnail */}
+                        {d.thumbnailUrl
+                          ? <img src={d.thumbnailUrl} alt="" className="w-8 h-12 rounded object-cover flex-shrink-0" />
+                          : <div className="w-8 h-12 rounded flex-shrink-0" style={{ background: 'var(--surface-alt)' }} />
+                        }
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{d.title}</p>
+                            {isTop && <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>🔥 Top</span>}
+                            {isBottom && <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--red)' }}>↓ Menos visto</span>}
+                          </div>
+                          {/* Barra */}
+                          <div className="h-1.5 rounded-full" style={{ background: 'var(--surface-alt)' }}>
+                            <div className="h-full rounded-full transition-all"
+                              style={{ width: `${pct}%`, background: isTop ? '#f59e0b' : isBottom ? 'var(--red)' : 'var(--accent)' }} />
+                          </div>
+                        </div>
+                        {/* Views */}
+                        <span className="text-sm font-bold flex-shrink-0" style={{ color: 'var(--text-dim)', fontFamily: 'var(--mono)' }}>
+                          {formatViews(d.views ?? 0)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* Conteúdo aba Dramas */}
+        {tab === 'dramas' && <>
 
         {/* Barra de categorias */}
         {categories.length > 0 && (
@@ -380,6 +476,8 @@ export default function Admin() {
             </div>
           )}
         </div>
+        </>}
+
       </div>
 
       {/* Modal form */}
