@@ -235,10 +235,7 @@ export default function Watch() {
         }}>
 
         {/* Progress bar */}
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-xs text-white" style={{ fontFamily: 'var(--mono)', minWidth: 36 }}>
-            {formatDuration(currentTime)}
-          </span>
+        <div className="flex items-center gap-3 mb-2">
           <input
             type="range"
             min={0}
@@ -251,10 +248,10 @@ export default function Watch() {
               accentColor: 'var(--accent)',
             }}
           />
-          <span className="text-xs text-white" style={{ fontFamily: 'var(--mono)', minWidth: 36, textAlign: 'right' }}>
-            {formatDuration(duration)}
-          </span>
         </div>
+        <span className="text-xs mb-3 block" style={{ fontFamily: 'var(--mono)', color: 'rgba(255,255,255,0.7)' }}>
+          {formatDuration(currentTime)} / {formatDuration(duration)}
+        </span>
 
         {/* Buttons */}
         <div className="flex items-center justify-between">
