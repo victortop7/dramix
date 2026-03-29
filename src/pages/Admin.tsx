@@ -274,33 +274,32 @@ export default function Admin() {
                     const isTop = i === 0
                     const isBottom = i === sorted.length - 1 && sorted.length > 1
                     return (
-                      <div key={d.id} className="flex items-center gap-4 px-5 py-3"
+                      <div key={d.id} className="flex items-center gap-3 px-3 py-3 md:px-5"
                         style={{ borderBottom: i < sorted.length - 1 ? '1px solid var(--border)' : 'none' }}>
                         {/* Posição */}
-                        <span className="text-sm font-bold w-6 text-center flex-shrink-0"
+                        <span className="text-sm font-bold w-5 text-center flex-shrink-0"
                           style={{ color: i === 0 ? '#f59e0b' : i === 1 ? '#9ca3af' : i === 2 ? '#cd7c2f' : 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
                           {i + 1}
                         </span>
                         {/* Thumbnail */}
                         {d.thumbnailUrl
-                          ? <img src={d.thumbnailUrl} alt="" className="w-8 h-12 rounded object-cover flex-shrink-0" />
-                          : <div className="w-8 h-12 rounded flex-shrink-0" style={{ background: 'var(--surface-alt)' }} />
+                          ? <img src={d.thumbnailUrl} alt="" className="w-7 h-10 rounded object-cover flex-shrink-0" />
+                          : <div className="w-7 h-10 rounded flex-shrink-0" style={{ background: 'var(--surface-alt)' }} />
                         }
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="text-sm font-semibold truncate" style={{ color: 'var(--text)' }}>{d.title}</p>
-                            {isTop && <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>🔥 Top</span>}
-                            {isBottom && <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--red)' }}>↓ Menos visto</span>}
+                          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                            <p className="text-xs font-semibold truncate" style={{ color: 'var(--text)', maxWidth: '60vw' }}>{d.title}</p>
+                            {isTop && <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: 10 }}>🔥 Top</span>}
+                            {isBottom && <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--red)', fontSize: 10 }}>↓ Menos</span>}
                           </div>
-                          {/* Barra */}
                           <div className="h-1.5 rounded-full" style={{ background: 'var(--surface-alt)' }}>
                             <div className="h-full rounded-full transition-all"
                               style={{ width: `${pct}%`, background: isTop ? '#f59e0b' : isBottom ? 'var(--red)' : 'var(--accent)' }} />
                           </div>
                         </div>
                         {/* Views */}
-                        <span className="text-sm font-bold flex-shrink-0" style={{ color: 'var(--text-dim)', fontFamily: 'var(--mono)' }}>
+                        <span className="text-xs font-bold flex-shrink-0" style={{ color: 'var(--text-dim)', fontFamily: 'var(--mono)' }}>
                           {formatViews(d.views ?? 0)}
                         </span>
                       </div>
@@ -358,9 +357,8 @@ export default function Admin() {
         )}
 
         {/* Table */}
-        <div className="rounded-2xl overflow-hidden fade-up"
-          style={{ border: '1px solid var(--border)', background: 'var(--surface)' }}>
-          <table className="w-full" style={{ borderCollapse: 'collapse' }}>
+        <div className="rounded-2xl fade-up" style={{ border: '1px solid var(--border)', background: 'var(--surface)', overflowX: 'auto' }}>
+          <table className="w-full" style={{ borderCollapse: 'collapse', minWidth: 600 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
                 {['Drama', 'Categorias', 'Views', 'Duração', 'Badges', 'Ações'].map(h => (
