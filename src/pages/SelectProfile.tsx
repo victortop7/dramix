@@ -96,14 +96,28 @@ export default function SelectProfile() {
             </button>
           ))}
 
-          {/* Adicionar perfil */}
-          {profiles.length < maxProfiles && (
+          {/* Adicionar perfil — sempre visível, redireciona para assinar se no limite */}
+          {profiles.length < maxProfiles ? (
             <button onClick={() => setIsAdding(true)}
               className="flex flex-col items-center gap-3 p-2"
               style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
               <div className="w-24 h-24 rounded-xl flex items-center justify-center"
                 style={{ border: '2px dashed var(--border-light)' }}>
                 <Plus size={28} style={{ color: 'var(--text-muted)' }} />
+              </div>
+              <span className="text-sm" style={{ color: 'var(--text-dim)' }}>Adicionar Perfil</span>
+            </button>
+          ) : (
+            <button onClick={() => navigate('/assinatura')}
+              className="flex flex-col items-center gap-3 p-2"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              <div className="w-24 h-24 rounded-xl flex items-center justify-center relative"
+                style={{ border: '2px dashed var(--border-light)' }}>
+                <Plus size={28} style={{ color: 'var(--text-muted)' }} />
+                <span className="absolute -top-2 -right-2 text-xs px-1.5 py-0.5 rounded-full font-bold"
+                  style={{ background: 'var(--accent)', color: '#fff', fontSize: 10 }}>
+                  PRO
+                </span>
               </div>
               <span className="text-sm" style={{ color: 'var(--text-dim)' }}>Adicionar Perfil</span>
             </button>
