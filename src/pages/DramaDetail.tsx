@@ -23,6 +23,14 @@ export default function DramaDetail() {
       .finally(() => setLoading(false))
   }, [id, navigate])
 
+  // Verifica se já está na lista do perfil atual
+  useEffect(() => {
+    if (!profile || !id) return
+    api.list.get(profile.id)
+      .then(({ dramas }) => setInList(dramas.some(d => d.id === id)))
+      .catch(() => {})
+  }, [profile, id])
+
   const toggleList = async () => {
     if (!profile || !drama) return
     if (inList) {
