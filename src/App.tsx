@@ -11,6 +11,7 @@ import Watch from './pages/Watch'
 import MyList from './pages/MyList'
 import Search from './pages/Search'
 import Admin from './pages/Admin'
+import Configuracoes from './pages/Configuracoes'
 import type { ReactNode } from 'react'
 
 function ChatWidget() {
@@ -58,6 +59,9 @@ export default function App() {
             <RequireAuth><MyList /></RequireAuth>
           } />
           <Route path="/buscar" element={<Search />} />
+          <Route path="/configuracoes" element={
+            <RequireAuth><Configuracoes /></RequireAuth>
+          } />
           <Route path="/admin" element={
             <RequireAdmin><Admin /></RequireAdmin>
           } />

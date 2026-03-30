@@ -13,6 +13,7 @@ interface AuthContextType {
   setProfile: (profile: Profile | null) => void
   hasAccess: () => boolean
   isAdmin: () => boolean
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -80,12 +81,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isAdmin = () => user?.isAdmin === true
 
+  const refreshUser = async () => {
+    try {
+      const { user: u } = await api.auth.me()
+      setUser(u)
+    } catch {}
+  }
+
   return (
     <AuthContext.Provider value={{
       user, profile, token, isLoading,
       login, register, logout,
       setProfile: selectProfile,
-      hasAccess, isAdmin,
+      hasAccess, isAdmin, refreshUser,
     }}>
       {children}
     </AuthContext.Provider>

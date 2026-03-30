@@ -78,6 +78,14 @@ export const api = {
       }),
   },
 
+  user: {
+    updateSettings: (data: { name?: string; currentPassword?: string; newPassword?: string }) =>
+      request<{ success: boolean }>('/user/settings', {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+  },
+
   history: {
     list: (profileId: string) =>
       request<{ dramas: import('../types').WatchProgress[] }>(`/user/history?profileId=${profileId}`),
