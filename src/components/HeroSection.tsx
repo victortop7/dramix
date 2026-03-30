@@ -44,13 +44,13 @@ export default function HeroSection({ dramas }: Props) {
           src={drama.thumbnailUrl}
           alt={drama.title}
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ objectPosition: 'center 20%', filter: 'brightness(0.35)', transition: 'opacity 0.3s ease', opacity: visible ? 1 : 0 }}
+          style={{ objectPosition: 'center 20%', filter: 'brightness(0.55)', transition: 'opacity 0.3s ease', opacity: visible ? 1 : 0 }}
         />
       )}
 
       {/* Gradient overlay */}
       <div className="absolute inset-0"
-        style={{ background: 'linear-gradient(to right, rgba(10,10,15,0.98) 35%, rgba(10,10,15,0.6) 65%, rgba(10,10,15,0.2) 100%), linear-gradient(to top, rgba(10,10,15,1) 0%, transparent 40%)' }} />
+        style={{ background: 'linear-gradient(to right, rgba(10,10,15,0.88) 30%, rgba(10,10,15,0.4) 60%, rgba(10,10,15,0.1) 100%), linear-gradient(to top, rgba(10,10,15,0.85) 0%, transparent 45%)' }} />
 
       {/* Card flutuante direita */}
       {drama.thumbnailUrl && (
