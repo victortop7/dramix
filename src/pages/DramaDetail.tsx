@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Play, Heart, HeartOff, Star, Eye, Clock, ArrowLeft } from 'lucide-react'
+import { Play, Heart, Star, Eye, Clock, ArrowLeft } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -174,7 +174,7 @@ export default function DramaDetail() {
               {user && profile && (
                 <button onClick={() => void toggleList()} className="btn-secondary px-4 py-3"
                   title={inList ? 'Remover da lista' : 'Adicionar à lista'}>
-                  {inList ? <HeartOff size={18} style={{ color: 'var(--red)' }} /> : <Heart size={18} />}
+                  <Heart size={18} fill={inList ? 'var(--red)' : 'none'} style={{ color: inList ? 'var(--red)' : 'currentColor' }} />
                 </button>
               )}
             </div>
