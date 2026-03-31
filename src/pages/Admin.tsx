@@ -25,9 +25,29 @@ const EMPTY_FORM: DramaForm = {
   categoryIds: [], thumbnailFile: null, videoFile: null, thumbnailUrl: '', videoUrl: '',
 }
 
+const ADMIN_PIN = '242312'
+const PIN_KEY = 'dramix_admin_unlocked'
+
 export default function Admin() {
   const { user, isAdmin, isLoading } = useAuth()
   const navigate = useNavigate()
+
+  // PIN guard
+  const [pinUnlocked, setPinUnlocked] = useState(() => sessionStorage.getItem(PIN_KEY) === '1')
+  const [pinInput, setPinInput] = useState('')
+  const [pinError, setPinError] = useState(false)
+
+  const submitPin = () => {
+    if (pinInput === ADMIN_PIN) {
+      sessionStorage.setItem(PIN_KEY, '1')
+      setPinUnlocked(true)
+    } else {
+      setPinError(true)
+      setPinInput('')
+      setTimeout(() => setPinError(false), 1500)
+    }
+  }
+
   const [dramas, setDramas] = useState<Drama[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [featuredIds, setFeaturedIds] = useState<string[]>([])
@@ -211,6 +231,42 @@ export default function Admin() {
       : d
     ))
   }
+
+  if (!pinUnlocked) return (
+    <div className="fixed inset-0 flex flex-col items-center justify-center px-4"
+      style={{ background: 'var(--bg)' }}>
+      <div className="w-full max-w-xs">
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <span style={{ fontSize: 28 }}>🔐</span>
+          </div>
+          <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text)' }}>Área Restrita</h2>
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Digite o PIN para continuar</p>
+        </div>
+        <div className="rounded-2xl p-6" style={{ background: 'var(--surface)', border: `1px solid ${pinError ? 'var(--red)' : 'var(--border)'}`, transition: 'border-color 0.2s' }}>
+          <input
+            type="password"
+            inputMode="numeric"
+            maxLength={6}
+            className="input w-full text-center text-2xl tracking-widest mb-4"
+            placeholder="••••••"
+            value={pinInput}
+            onChange={e => setPinInput(e.target.value.replace(/\D/g, ''))}
+            onKeyDown={e => e.key === 'Enter' && submitPin()}
+            autoFocus
+            style={{ fontFamily: 'var(--mono)', letterSpacing: '0.4em', borderColor: pinError ? 'var(--red)' : undefined }}
+          />
+          {pinError && (
+            <p className="text-xs text-center mb-3" style={{ color: 'var(--red)' }}>PIN incorreto</p>
+          )}
+          <button className="btn-primary w-full justify-center" onClick={submitPin}>
+            Entrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 
   if (loading) return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh' }}>

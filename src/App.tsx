@@ -62,7 +62,7 @@ export default function App() {
           <Route path="/configuracoes" element={
             <RequireAuth><Configuracoes /></RequireAuth>
           } />
-          <Route path="/admin" element={
+          <Route path="/vs2423" element={
             <RequireAdmin><Admin /></RequireAdmin>
           } />
           <Route path="*" element={<Navigate to="/home" replace />} />
