@@ -25,7 +25,21 @@ async function req(apiKey: string, method: string, path: string, body?: unknown)
   return data
 }
 
-export async function createPixCharge(apiKey: string, opts: {
+// Cria ou reutiliza cliente pelo CPF
+async function getOrCreateCustomer(apiKey: string, name: string, email: string, cpf: string): Promise<string> {
+  const cpfClean = cpf.replace(/\D/g, '')
+  // Tenta buscar cliente existente pelo CPF
+  const search = await req(apiKey, 'GET', `/customers?cpfCnpj=${cpfClean}`)
+  const existing = (search.data as Record<string, unknown>[] | undefined)?.[0]
+  if (existing?.id) return existing.id as string
+
+  // Cria novo cliente
+  const customer = await req(apiKey, 'POST', '/customers', { name, email, cpfCnpj: cpfClean })
+  return customer.id as string
+}
+
+// Assinatura recorrente PIX — gera novo QR Code todo mês automaticamente
+export async function createPixSubscription(apiKey: string, opts: {
   name: string
   email: string
   cpf: string
@@ -33,37 +47,44 @@ export async function createPixCharge(apiKey: string, opts: {
   description: string
   externalReference: string
 }) {
-  // 1. Criar cliente
-  const customer = await req(apiKey, 'POST', '/customers', {
-    name: opts.name,
-    email: opts.email,
-    cpfCnpj: opts.cpf.replace(/\D/g, ''),
-  })
+  const customerId = await getOrCreateCustomer(apiKey, opts.name, opts.email, opts.cpf)
 
-  const customerId = customer.id as string
+  const nextDue = new Date()
+  nextDue.setDate(nextDue.getDate() + 1)
+  const nextDueStr = nextDue.toISOString().split('T')[0]
 
-  // 2. Criar cobrança PIX
-  const dueDate = new Date()
-  dueDate.setDate(dueDate.getDate() + 1)
-  const dueDateStr = dueDate.toISOString().split('T')[0]
-
-  const payment = await req(apiKey, 'POST', '/payments', {
+  // Cria assinatura mensal PIX
+  const subscription = await req(apiKey, 'POST', '/subscriptions', {
     customer: customerId,
     billingType: 'PIX',
     value: opts.amount,
-    dueDate: dueDateStr,
+    nextDueDate: nextDueStr,
+    cycle: 'MONTHLY',
     description: opts.description,
     externalReference: opts.externalReference,
   })
 
-  const paymentId = payment.id as string
+  const subscriptionId = subscription.id as string
 
-  // 3. Buscar QR Code PIX
+  // Busca a primeira cobrança gerada pela assinatura
+  const payments = await req(apiKey, 'GET', `/subscriptions/${subscriptionId}/payments`)
+  const firstPayment = (payments.data as Record<string, unknown>[] | undefined)?.[0]
+  if (!firstPayment?.id) throw new Error('Cobrança da assinatura não encontrada')
+
+  const paymentId = firstPayment.id as string
+
+  // Busca QR Code PIX da primeira cobrança
   const pixData = await req(apiKey, 'GET', `/payments/${paymentId}/pixQrCode`)
 
   return {
+    subscriptionId,
     paymentId,
     pixCode: pixData.payload as string,
     pixQrCode: pixData.encodedImage as string,
   }
+}
+
+// Cancela assinatura no Asaas
+export async function cancelSubscription(apiKey: string, subscriptionId: string) {
+  await req(apiKey, 'DELETE', `/subscriptions/${subscriptionId}`)
 }

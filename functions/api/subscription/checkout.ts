@@ -1,7 +1,7 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 import type { Env } from '../../lib/types'
 import { getUser } from '../../lib/auth'
-import { createPixCharge } from '../../lib/asaas'
+import { createPixSubscription } from '../../lib/asaas'
 
 const PLAN_PRICES: Record<string, number> = {
   basic: 15.90,
@@ -24,7 +24,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
 
     const externalRef = `${user.id}:${plan}`
 
-    const charge = await createPixCharge(env.ASAAS_API_KEY, {
+    const charge = await createPixSubscription(env.ASAAS_API_KEY, {
       name: user.name,
       email: user.email,
       cpf,
