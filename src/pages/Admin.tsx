@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Pencil, Trash2, Star, Upload, X, Check, BarChart2, Film } from 'lucide-react'
+import { Plus, Pencil, Trash2, Star, Upload, X, Check, BarChart2, Film, Users } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -39,7 +39,18 @@ export default function Admin() {
   const [uploadProgress, setUploadProgress] = useState('')
   const [catPopover, setCatPopover] = useState<string | null>(null)
   const [selectedCat, setSelectedCat] = useState<string | null>(null)
-  const [tab, setTab] = useState<'dramas' | 'dashboard'>('dramas')
+  const [tab, setTab] = useState<'dramas' | 'dashboard' | 'members'>('dramas')
+
+  interface Member {
+    id: string; name: string; email: string; whatsapp: string | null
+    plan: string; planExpiresAt: string | null; status: 'free' | 'active' | 'overdue'
+    profileCount: number; createdAt: string
+  }
+  interface MemberSummary { total: number; active: number; free: number; overdue: number; basic: number; premium: number }
+  const [members, setMembers] = useState<Member[]>([])
+  const [memberSummary, setMemberSummary] = useState<MemberSummary | null>(null)
+  const [membersLoading, setMembersLoading] = useState(false)
+  const [memberFilter, setMemberFilter] = useState<'all' | 'active' | 'free' | 'overdue'>('all')
   const thumbInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
 
@@ -56,6 +67,15 @@ export default function Admin() {
       setCategories(cats)
     }).finally(() => setLoading(false))
   }, [user, isAdmin, isLoading, navigate])
+
+  useEffect(() => {
+    if (tab !== 'members' || membersLoading || members.length > 0) return
+    setMembersLoading(true)
+    api.admin.listMembers()
+      .then(({ members: m, summary: s }) => { setMembers(m); setMemberSummary(s) })
+      .catch(() => {})
+      .finally(() => setMembersLoading(false))
+  }, [tab])
 
   const openCreate = () => { setForm(EMPTY_FORM); setEditId(null); setShowForm(true) }
   const openEdit = (d: Drama) => {
@@ -227,6 +247,7 @@ export default function Admin() {
           {([
             { key: 'dramas', label: 'Dramas', icon: <Film size={15} /> },
             { key: 'dashboard', label: 'Dashboard', icon: <BarChart2 size={15} /> },
+            { key: 'members', label: 'Membros', icon: <Users size={15} /> },
           ] as const).map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
@@ -310,6 +331,118 @@ export default function Admin() {
             </div>
           )
         })()}
+
+        {/* Aba Membros */}
+        {tab === 'members' && (
+          <div className="fade-up">
+            {membersLoading ? (
+              <div className="flex justify-center py-16">
+                <div className="w-8 h-8 rounded-full border-2 border-violet-600 border-t-transparent" style={{ animation: 'spin 0.8s linear infinite' }} />
+              </div>
+            ) : (
+              <>
+                {/* Cards resumo */}
+                {memberSummary && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    {[
+                      { label: 'Total', value: memberSummary.total, color: 'var(--text)' },
+                      { label: 'Ativos', value: memberSummary.active, color: 'var(--green)' },
+                      { label: 'Em Atraso', value: memberSummary.overdue, color: 'var(--red)' },
+                      { label: 'Gratuitos', value: memberSummary.free, color: 'var(--text-dim)' },
+                    ].map(c => (
+                      <div key={c.label} className="rounded-xl p-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                        <p className="text-xs uppercase mb-1" style={{ color: 'var(--text-muted)', letterSpacing: '0.05em' }}>{c.label}</p>
+                        <p className="text-2xl font-bold" style={{ color: c.color, fontFamily: 'var(--mono)' }}>{c.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Filtros */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {(['all', 'active', 'overdue', 'free'] as const).map(f => (
+                    <button key={f} onClick={() => setMemberFilter(f)}
+                      className="text-xs px-3 py-1.5 rounded-full transition-all"
+                      style={{
+                        background: memberFilter === f ? 'var(--accent-dim)' : 'var(--surface)',
+                        border: memberFilter === f ? '1px solid var(--accent)' : '1px solid var(--border)',
+                        color: memberFilter === f ? 'var(--accent-light)' : 'var(--text-dim)',
+                        cursor: 'pointer',
+                      }}>
+                      {f === 'all' ? 'Todos' : f === 'active' ? '✓ Ativos' : f === 'overdue' ? '⚠ Em Atraso' : '○ Gratuitos'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Tabela */}
+                <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                          {['Nome / E-mail', 'Plano', 'Status', 'Expira em', 'Cadastro'].map(h => (
+                            <th key={h} className="text-left px-4 py-3 text-xs uppercase"
+                              style={{ color: 'var(--text-muted)', letterSpacing: '0.05em', fontWeight: 600 }}>
+                              {h}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {members
+                          .filter(m => memberFilter === 'all' || m.status === memberFilter)
+                          .map((m, i, arr) => {
+                            const statusColor = m.status === 'active' ? 'var(--green)' : m.status === 'overdue' ? 'var(--red)' : 'var(--text-muted)'
+                            const statusLabel = m.status === 'active' ? 'Ativo' : m.status === 'overdue' ? 'Em Atraso' : 'Gratuito'
+                            const planLabel = m.plan === 'basic' ? 'Básico' : m.plan === 'premium' ? 'Premium' : 'Gratuito'
+                            const planColor = m.plan === 'premium' ? 'var(--amber)' : m.plan === 'basic' ? 'var(--accent)' : 'var(--text-muted)'
+                            const expDate = m.planExpiresAt ? new Date(m.planExpiresAt).toLocaleDateString('pt-BR') : '—'
+                            const regDate = new Date(m.createdAt).toLocaleDateString('pt-BR')
+                            return (
+                              <tr key={m.id} style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                                <td className="px-4 py-3">
+                                  <p className="text-sm font-semibold" style={{ color: 'var(--text)' }}>{m.name}</p>
+                                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{m.email}</p>
+                                  {m.whatsapp && (
+                                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{m.whatsapp}</p>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="text-xs font-bold px-2 py-1 rounded-full"
+                                    style={{ background: `color-mix(in srgb, ${planColor} 15%, transparent)`, color: planColor }}>
+                                    {planLabel}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: statusColor }}>
+                                    <span className="w-2 h-2 rounded-full" style={{ background: statusColor, flexShrink: 0 }} />
+                                    {statusLabel}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-xs" style={{ color: m.status === 'overdue' ? 'var(--red)' : 'var(--text-dim)', fontFamily: 'var(--mono)' }}>
+                                  {expDate}
+                                </td>
+                                <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
+                                  {regDate}
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        {members.filter(m => memberFilter === 'all' || m.status === memberFilter).length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-10 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+                              Nenhum membro encontrado.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Conteúdo aba Dramas */}
         {tab === 'dramas' && <>

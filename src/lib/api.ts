@@ -142,6 +142,14 @@ export const api = {
         body: JSON.stringify({ key, uploadId, parts }),
       }),
     listDramas: () => request<{ dramas: import('../types').Drama[] }>('/admin/dramas'),
+    listMembers: () => request<{
+      members: Array<{
+        id: string; name: string; email: string; whatsapp: string | null
+        plan: string; planExpiresAt: string | null; status: 'free' | 'active' | 'overdue'
+        profileCount: number; createdAt: string
+      }>
+      summary: { total: number; active: number; free: number; overdue: number; basic: number; premium: number }
+    }>('/admin/members'),
   },
 
   subscription: {
