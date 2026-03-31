@@ -1,5 +1,4 @@
-// Trocar para 'https://api.asaas.com/v3' quando mudar para produção
-const BASE_URL = 'https://sandbox.asaas.com/api/v3'
+const BASE_URL = 'https://api.asaas.com/v3'
 
 async function req(apiKey: string, method: string, path: string, body?: unknown) {
   const res = await fetch(`${BASE_URL}${path}`, {
