@@ -126,7 +126,7 @@ export default function Navbar() {
                     { icon: <Heart size={14} />, label: 'Minha Lista', to: '/minha-lista' },
                     { icon: <Crown size={14} />, label: 'Assinatura', to: '/assinatura' },
                     { icon: <Settings size={14} />, label: 'Configurações', to: '/configuracoes' },
-                    ...(isAdmin() ? [{ icon: <ShieldCheck size={14} />, label: 'Admin', to: '/admin' }] : []),
+                    ...(isAdmin() ? [{ icon: <ShieldCheck size={14} />, label: 'Admin', to: '/vs2423' }] : []),
                   ].map(item => (
                     <Link key={item.to} to={item.to}
                       onClick={() => setUserMenuOpen(false)}
