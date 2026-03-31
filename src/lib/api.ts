@@ -35,6 +35,14 @@ export const api = {
         body: JSON.stringify(data),
       }),
     me: () => request<{ user: import('../types').User }>('/auth/me'),
+    forgotPassword: (email: string) =>
+      request<{ success: boolean; waUrl?: string }>('/auth/forgot-password', {
+        method: 'POST', body: JSON.stringify({ email }),
+      }),
+    resetPassword: (token: string, newPassword: string) =>
+      request<{ success: boolean }>('/auth/reset-password', {
+        method: 'POST', body: JSON.stringify({ token, newPassword }),
+      }),
   },
 
   profiles: {
@@ -142,6 +150,10 @@ export const api = {
         body: JSON.stringify({ key, uploadId, parts }),
       }),
     listDramas: () => request<{ dramas: import('../types').Drama[] }>('/admin/dramas'),
+    resetMemberPassword: (userId: string, newPassword: string) =>
+      request<{ success: boolean }>('/admin/reset-member-password', {
+        method: 'POST', body: JSON.stringify({ userId, newPassword }),
+      }),
     listMembers: () => request<{
       members: Array<{
         id: string; name: string; email: string; whatsapp: string | null

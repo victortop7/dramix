@@ -13,6 +13,7 @@ import MyList from './pages/MyList'
 import Search from './pages/Search'
 import Admin from './pages/Admin'
 import Configuracoes from './pages/Configuracoes'
+import ForgotPassword from './pages/ForgotPassword'
 import type { ReactNode } from 'react'
 
 function ChatWidget() {
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/select-profile" element={
             <RequireAuth><SelectProfile /></RequireAuth>
           } />

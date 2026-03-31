@@ -436,7 +436,7 @@ export default function Admin() {
                     <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse' }}>
                       <thead>
                         <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                          {['Nome / E-mail', 'Plano', 'Status', 'Expira em', 'Cadastro'].map(h => (
+                          {['Nome / E-mail', 'Plano', 'Status', 'Expira em', 'Cadastro', ''].map(h => (
                             <th key={h} className="text-left px-4 py-3 text-xs uppercase"
                               style={{ color: 'var(--text-muted)', letterSpacing: '0.05em', fontWeight: 600 }}>
                               {h}
@@ -480,6 +480,20 @@ export default function Admin() {
                                 </td>
                                 <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
                                   {regDate}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <button
+                                    onClick={() => {
+                                      const pwd = prompt(`Nova senha para ${m.name}:`)
+                                      if (!pwd || pwd.length < 6) { alert('Senha deve ter pelo menos 6 caracteres'); return }
+                                      api.admin.resetMemberPassword(m.id, pwd)
+                                        .then(() => alert(`Senha de ${m.name} redefinida com sucesso!`))
+                                        .catch(e => alert(`Erro: ${e instanceof Error ? e.message : String(e)}`))
+                                    }}
+                                    className="text-xs px-2 py-1 rounded-lg"
+                                    style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text-dim)', cursor: 'pointer' }}>
+                                    🔑 Reset
+                                  </button>
                                 </td>
                               </tr>
                             )
