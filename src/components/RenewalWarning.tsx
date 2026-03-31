@@ -116,18 +116,24 @@ export default function RenewalWarning() {
 
   return (
     <>
-      {/* Banner fixo no topo (dia 29) */}
+      {/* Banner + popup dia 29 */}
       {showBanner && !isGrace && (
-        <div className="fixed top-0 left-0 right-0 z-50 px-4 py-2 flex items-center justify-between gap-4"
-          style={{ background: 'var(--amber)', color: '#000' }}>
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <Crown size={15} />
-            Seu plano vence amanhã — renove agora para não perder o acesso
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: 'rgba(0,0,0,0.85)' }}>
+          <div className="w-full max-w-sm rounded-2xl p-6"
+            style={{ background: 'var(--surface)', border: '1px solid var(--amber)' }}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Crown size={18} style={{ color: 'var(--amber)' }} />
+                <h3 className="font-bold" style={{ color: 'var(--text)' }}>Renovar Plano</h3>
+              </div>
+              <button onClick={() => setShowBanner(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={18} />
+              </button>
+            </div>
+            <PixContent />
           </div>
-          <button onClick={() => setShowBanner(false)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#000' }}>
-            <X size={16} />
-          </button>
         </div>
       )}
 
