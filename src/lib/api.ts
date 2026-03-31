@@ -125,13 +125,16 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ filename }),
       }),
-    uploadChunk: (key: string, uploadId: string, partNumber: number, chunk: Blob) => {
+    uploadChunk: async (key: string, uploadId: string, partNumber: number, chunk: Blob): Promise<{ etag: string; partNumber: number }> => {
       const token = getToken()
-      return fetch(`${BASE}/admin/upload-chunk?key=${encodeURIComponent(key)}&uploadId=${encodeURIComponent(uploadId)}&partNumber=${partNumber}`, {
+      const res = await fetch(`${BASE}/admin/upload-chunk?key=${encodeURIComponent(key)}&uploadId=${encodeURIComponent(uploadId)}&partNumber=${partNumber}`, {
         method: 'POST',
         body: chunk,
         headers: { 'Authorization': `Bearer ${token ?? ''}`, 'Content-Type': 'application/octet-stream' },
-      }).then(r => r.json()) as Promise<{ etag: string; partNumber: number }>
+      })
+      const data = await res.json() as { etag: string; partNumber: number; error?: string }
+      if (!res.ok || data.error) throw new Error(data.error ?? `Erro no chunk ${partNumber}`)
+      return data
     },
     completeUpload: (key: string, uploadId: string, parts: Array<{ partNumber: number; etag: string }>) =>
       request<{ success: boolean }>('/admin/upload-complete', {

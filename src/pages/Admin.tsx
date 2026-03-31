@@ -86,7 +86,7 @@ export default function Admin() {
     }
 
     // Vídeo grande — upload em chunks via multipart R2
-    const CHUNK = 50 * 1024 * 1024 // 50MB por chunk
+    const CHUNK = 10 * 1024 * 1024 // 10MB por chunk (Workers tem limite de body)
     const { uploadId, key, publicUrl } = await api.admin.startUpload(file.name)
     const total = Math.ceil(file.size / CHUNK)
     const parts: Array<{ partNumber: number; etag: string }> = []
