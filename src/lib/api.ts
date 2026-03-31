@@ -158,5 +158,7 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ plan, cpf }),
       }),
+    getRenewal: () =>
+      request<{ pixCode: string; pixQrCode: string; dueDate: string }>('/subscription/renewal'),
   },
 }

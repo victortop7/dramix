@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import WhatsAppChat from './components/WhatsAppChat'
+import RenewalWarning from './components/RenewalWarning'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import SelectProfile from './pages/SelectProfile'
@@ -17,7 +18,12 @@ import type { ReactNode } from 'react'
 function ChatWidget() {
   const { pathname } = useLocation()
   if (pathname.startsWith('/watch')) return null
-  return <WhatsAppChat />
+  return (
+    <>
+      <WhatsAppChat />
+      <RenewalWarning />
+    </>
+  )
 }
 
 function RequireAuth({ children }: { children: ReactNode }) {

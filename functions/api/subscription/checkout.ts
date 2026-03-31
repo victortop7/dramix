@@ -33,6 +33,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
       externalReference: externalRef,
     })
 
+    // Salva subscription ID no banco para buscar renovação depois
+    await env.DB.prepare(`
+      INSERT INTO subscriptions (id, user_id, plan, status, syncpay_id, amount_cents)
+      VALUES (lower(hex(randomblob(16))), ?, ?, 'active', ?, ?)
+      ON CONFLICT DO NOTHING
+    `).bind(user.id, plan, charge.subscriptionId, Math.round(PLAN_PRICES[plan] * 100)).run()
+
     return json({
       paymentId: charge.paymentId,
       pixCode: charge.pixCode,
