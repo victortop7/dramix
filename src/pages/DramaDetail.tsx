@@ -43,8 +43,6 @@ export default function DramaDetail() {
   }
 
   const handleWatch = () => {
-    if (!user) { navigate('/login'); return }
-    if (!hasAccess()) { navigate('/assinatura'); return }
     navigate(`/watch/${drama?.id}`)
   }
 
