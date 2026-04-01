@@ -2,27 +2,12 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Play, Heart, Settings, Search, LogOut, User, Crown, ChevronDown, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { api } from '../lib/api'
 
 const AVATAR_EMOJIS: Record<string, string> = {
   robot: '🤖', cat: '🐱', fox: '🦊', panda: '🐼',
   bear: '🐻', dragon: '🐉', fairy: '🧚', ninja: '🥷',
 }
-
-const CATEGORIES = [
-  { name: 'Novos Na Plataforma', slug: 'novos' },
-  { name: 'Dublados', slug: 'dublados' },
-  { name: 'Romance', slug: 'romance' },
-  { name: 'Suspense', slug: 'suspense' },
-  { name: 'Comédia', slug: 'comedia' },
-  { name: 'Ação', slug: 'acao' },
-  { name: 'Animes', slug: 'animes' },
-  { name: 'BL & GL', slug: 'bl-gl' },
-  { name: 'Identidade Escondida', slug: 'identidade-escondida' },
-  { name: 'Amor à Primeira Vista', slug: 'amor-primeira-vista' },
-  { name: 'Bebês e Gravidezes', slug: 'bebes-gravidezes' },
-  { name: 'Relacionamento Tabu', slug: 'relacionamento-tabu' },
-  { name: 'Homem-lobo e Vampiro', slug: 'homem-lobo-vampiro' },
-]
 
 export default function Navbar() {
   const { user, profile, logout, hasAccess, isAdmin } = useAuth()
@@ -31,7 +16,14 @@ export default function Navbar() {
   const [catOpen, setCatOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [categories, setCategories] = useState<{ name: string; slug: string }[]>([])
   const catRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    api.categories.list()
+      .then(({ categories: cats }) => setCategories(cats))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -118,7 +110,7 @@ export default function Navbar() {
                   backdropFilter: 'blur(20px)',
                   width: 220,
                 }}>
-                {CATEGORIES.map(cat => (
+                {categories.map(cat => (
                   <Link
                     key={cat.slug}
                     to={`/categoria/${cat.slug}`}
