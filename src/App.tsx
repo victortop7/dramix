@@ -14,6 +14,7 @@ import Search from './pages/Search'
 import Admin from './pages/Admin'
 import Configuracoes from './pages/Configuracoes'
 import ForgotPassword from './pages/ForgotPassword'
+import Categoria from './pages/Categoria'
 import type { ReactNode } from 'react'
 
 function ChatWidget() {
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="/minha-lista" element={
             <RequireAuth><MyList /></RequireAuth>
           } />
+          <Route path="/categoria/:slug" element={<Categoria />} />
           <Route path="/buscar" element={<Search />} />
           <Route path="/configuracoes" element={
             <RequireAuth><Configuracoes /></RequireAuth>
