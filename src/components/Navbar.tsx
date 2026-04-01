@@ -160,8 +160,21 @@ export default function Navbar() {
           </button>
         )}
 
-        {/* Plano badge */}
-        {user && (
+        {/* Botão assinar — para usuários free logados */}
+        {user && user.plan === 'free' && !user.isAdmin && (
+          <button
+            onClick={() => navigate('/assinatura')}
+            className="hidden sm:flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-bold"
+            style={{ background: 'var(--accent)', border: 'none', color: '#fff', cursor: 'pointer', transition: 'background 0.2s' }}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--accent-hover)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'var(--accent)')}>
+            <Crown size={12} />
+            Assinar
+          </button>
+        )}
+
+        {/* Plano badge — só para assinantes */}
+        {user && user.plan !== 'free' && (
           <button
             onClick={() => navigate('/assinatura')}
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"

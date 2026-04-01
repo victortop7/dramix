@@ -9,7 +9,7 @@ import type { Drama } from '../types'
 
 export default function DramaDetail() {
   const { id } = useParams<{ id: string }>()
-  const { user, profile, hasAccess } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
   const [drama, setDrama] = useState<Drama | null>(null)
   const [inList, setInList] = useState(false)
@@ -167,7 +167,7 @@ export default function DramaDetail() {
             <div className="flex gap-3 mt-2">
               <button onClick={handleWatch} className="btn-primary px-8 py-3">
                 <Play size={16} fill="white" />
-                {hasAccess() ? 'Assistir' : 'Assinar para assistir'}
+                Assistir
               </button>
               {user && profile && (
                 <button onClick={() => void toggleList()} className="btn-secondary px-4 py-3"
@@ -176,12 +176,6 @@ export default function DramaDetail() {
                 </button>
               )}
             </div>
-
-            {!hasAccess() && (
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                Assine a partir de R$15,90/mês para assistir sem limites.
-              </p>
-            )}
           </div>
         </div>
       </div>
