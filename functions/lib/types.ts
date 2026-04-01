@@ -8,4 +8,5 @@ export interface Env {
   R2_SECRET_ACCESS_KEY: string
   R2_ENDPOINT: string   // https://37f46dbeaab9c3be96f3a111d9796161.r2.cloudflarestorage.com
   R2_BUCKET: string     // dramix-videos
+  ASAAS_WEBHOOK_TOKEN: string
 }

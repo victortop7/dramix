@@ -8,6 +8,11 @@ const PIX_CANCELLED = ['PIX_AUTOMATIC_RECURRING_AUTHORIZATION_DEACTIVATED', 'PIX
 
 export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
   try {
+    const token = request.headers.get('asaas-access-token') ?? ''
+    if (env.ASAAS_WEBHOOK_TOKEN && token !== env.ASAAS_WEBHOOK_TOKEN) {
+      return new Response('{}', { status: 401 }) as unknown as import('@cloudflare/workers-types').Response
+    }
+
     const body = await request.text()
     const event = JSON.parse(body) as Record<string, unknown>
 

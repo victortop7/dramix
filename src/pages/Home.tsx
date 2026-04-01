@@ -68,7 +68,7 @@ export default function Home() {
 
       {/* Paywall banner */}
       {user && user.plan === 'free' && (
-        <div className="mx-4 md:mx-8 my-6 rounded-2xl flex items-center justify-between gap-4 px-6 py-4 fade-up"
+        <div className="mx-4 md:mx-10 my-6 rounded-2xl flex items-center justify-between gap-4 px-6 py-4 fade-up"
           style={{
             background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(124,58,237,0.05))',
             border: '1px solid var(--accent-dim)',
@@ -85,7 +85,7 @@ export default function Home() {
 
       {/* Search bar mobile (só para assinantes) */}
       {user && (user.plan === 'basic' || user.plan === 'premium' || user.isAdmin) && (
-        <div className="px-4 md:hidden mb-6 mt-4">
+        <div className="px-4 md:hidden mb-6 mt-4 md:px-10">
           <button
             onClick={() => navigate('/buscar')}
             className="w-full flex items-center gap-2 px-4 py-3 rounded-xl text-sm text-left"
@@ -97,7 +97,7 @@ export default function Home() {
 
       {/* Continue assistindo */}
       {continueWatching.length > 0 && (
-        <div className="px-4 md:px-8 mt-6 mb-2">
+        <div className="px-4 md:px-10 mt-6 mb-2">
           <h2 className="text-base font-bold mb-4" style={{ color: 'var(--text)' }}>Continue assistindo</h2>
           <div className="flex gap-3 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none' }}>
             {continueWatching.map(d => {
@@ -136,7 +136,7 @@ export default function Home() {
       <div className="pb-16 mt-6">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="mb-8 px-4 md:px-8">
+            <div key={i} className="mb-8 px-4 md:px-10">
               <div className="skeleton h-5 w-40 rounded mb-4" />
               <div className="flex gap-3">
                 {Array.from({ length: 6 }).map((_, j) => (
