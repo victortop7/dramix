@@ -70,7 +70,7 @@ export default function Navbar() {
 
         {/* Links desktop */}
         <div className="hidden md:flex items-center gap-1">
-          <Link to="/home"
+          {hasAccess() && <Link to="/home"
             className="px-3 py-1.5 rounded-lg text-sm font-medium"
             style={{
               color: location.pathname === '/home' ? '#fff' : 'rgba(255,255,255,0.65)',
@@ -80,7 +80,7 @@ export default function Navbar() {
             onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
             onMouseLeave={e => (e.currentTarget.style.color = location.pathname === '/home' ? '#fff' : 'rgba(255,255,255,0.65)')}>
             Início
-          </Link>
+          </Link>}
 
           {/* Categorias dropdown — só para assinantes */}
           {hasAccess() && <div ref={catRef} className="relative">
