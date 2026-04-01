@@ -108,7 +108,10 @@ export default function Navbar() {
                   border: '1px solid rgba(255,255,255,0.08)',
                   boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
                   backdropFilter: 'blur(20px)',
-                  width: 220,
+                  width: 200,
+                  maxHeight: 320,
+                  overflowY: 'auto',
+                  scrollbarWidth: 'thin',
                 }}>
                 {categories.map(cat => (
                   <Link
