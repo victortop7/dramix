@@ -6,7 +6,8 @@ import { useAuth } from '../contexts/AuthContext'
 import type { Drama } from '../types'
 import { formatDuration } from '../lib/format'
 
-const FREE_LIMIT = 1800 // 30 minutos em segundos
+const ANON_LIMIT = 300  // 5 minutos para anônimos
+const FREE_LIMIT = 1800 // 30 minutos para conta grátis
 const LS_KEY = 'dramix_anon_free_seconds' // localStorage para anônimos
 
 function getAnonUsed(): number {
@@ -39,11 +40,12 @@ export default function Watch() {
   const isFree = isAnon || (user?.plan === 'free' && !user?.isAdmin)
   const isPaid = user && (user.plan === 'basic' || user.plan === 'premium' || user.isAdmin)
 
+  const limit = isAnon ? ANON_LIMIT : FREE_LIMIT
   const initialUsed = isAnon ? getAnonUsed() : (user?.freeSecondsUsed ?? 0)
   const [liveUsed, setLiveUsed] = useState(initialUsed)
   const liveUsedRef = useRef(initialUsed)
 
-  const freeLeft = Math.max(0, FREE_LIMIT - liveUsed)
+  const freeLeft = Math.max(0, limit - liveUsed)
   const freeUsedMin = Math.floor(liveUsed / 60)
   const freeLeftMin = Math.ceil(freeLeft / 60)
 
@@ -51,7 +53,7 @@ export default function Watch() {
   useEffect(() => {
     if (!id) return
     // Se já esgotou o trial e não é pago, mostra paywall direto
-    if (isFree && !isPaid && getAnonUsed() >= FREE_LIMIT && !user) {
+    if (isFree && !isPaid && getAnonUsed() >= ANON_LIMIT && !user) {
       setLoading(false)
       setShowPaywall(true)
       return
@@ -102,10 +104,10 @@ export default function Watch() {
         setLiveUsed(prev => {
           const next = prev + 1
           liveUsedRef.current = next
-          if (next >= FREE_LIMIT) {
+          if (next >= limit) {
             videoRef.current?.pause()
             setShowPaywall(true)
-            if (isAnon) saveAnonUsed(FREE_LIMIT)
+            if (isAnon) saveAnonUsed(ANON_LIMIT)
             else void api.history.saveFreeTime(FREE_LIMIT)
           }
           return next
@@ -261,7 +263,7 @@ export default function Watch() {
             <Crown size={13} style={{ color: '#f59e0b' }} />
             <span style={{ color: 'rgba(255,255,255,0.6)' }}>{freeUsedMin} min assistidos</span>
             <span style={{ color: 'rgba(255,255,255,0.3)' }}>•</span>
-            <span style={{ color: freeLeft < 300 ? '#ef4444' : '#f59e0b' }}>{freeLeftMin} min restantes</span>
+            <span style={{ color: freeLeft < (isAnon ? 60 : 300) ? '#ef4444' : '#f59e0b' }}>{freeLeftMin} min restantes</span>
           </div>
         </div>
       )}
@@ -277,8 +279,14 @@ export default function Watch() {
               <Crown size={28} style={{ color: '#f59e0b' }} />
             </div>
             <div>
-              <p className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>Seus 30 minutos grátis acabaram</p>
-              <p className="text-sm" style={{ color: 'var(--text-dim)' }}>Assine o Dramix e continue assistindo todos os dramas sem limites.</p>
+              <p className="text-lg font-bold mb-1" style={{ color: 'var(--text)' }}>
+                {isAnon ? 'Seus 5 minutos de prévia acabaram' : 'Seus 30 minutos grátis acabaram'}
+              </p>
+              <p className="text-sm" style={{ color: 'var(--text-dim)' }}>
+                {isAnon
+                  ? 'Crie uma conta grátis e ganhe 30 minutos para assistir. Ou assine para acesso ilimitado.'
+                  : 'Assine o Dramix e continue assistindo todos os dramas sem limites.'}
+              </p>
             </div>
             <button className="btn-primary w-full py-3 text-sm font-semibold" onClick={() => navigate('/assinatura')}>
               Ver planos — a partir de R$15,90/mês
