@@ -46,7 +46,6 @@ export default function Watch() {
   const liveUsedRef = useRef(initialUsed)
 
   const freeLeft = Math.max(0, limit - liveUsed)
-  const freeUsedMin = Math.floor(liveUsed / 60)
   const freeLeftMin = Math.ceil(freeLeft / 60)
 
   // Carrega o drama (sem exigir login)
@@ -255,15 +254,13 @@ export default function Watch() {
         />
       </div>
 
-      {/* Banner trial */}
-      {!isPaid && !showPaywall && (
+      {/* Banner trial — só aparece quando falta pouco tempo */}
+      {!isPaid && !showPaywall && freeLeft <= (isAnon ? 60 : 300) && (
         <div className="absolute top-14 left-0 right-0 flex justify-center z-10 pointer-events-none">
           <div className="flex items-center gap-3 px-4 py-2 rounded-full text-xs font-semibold"
-            style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' }}>
-            <Crown size={13} style={{ color: '#f59e0b' }} />
-            <span style={{ color: 'rgba(255,255,255,0.6)' }}>{freeUsedMin} min assistidos</span>
-            <span style={{ color: 'rgba(255,255,255,0.3)' }}>•</span>
-            <span style={{ color: freeLeft < (isAnon ? 60 : 300) ? '#ef4444' : '#f59e0b' }}>{freeLeftMin} min restantes</span>
+            style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(239,68,68,0.4)', color: '#fff' }}>
+            <Crown size={13} style={{ color: '#ef4444' }} />
+            <span style={{ color: '#ef4444' }}>{freeLeftMin} min restante{freeLeftMin !== 1 ? 's' : ''}</span>
           </div>
         </div>
       )}
