@@ -35,9 +35,8 @@ async function getOrCreateCustomer(apiKey: string, name: string, email: string, 
   return customer.id as string
 }
 
-// Pix Automático com Adesão Imediata
-// O cliente paga o primeiro QR Code e já autoriza todos os próximos automaticamente
-export async function createPixAutomatic(apiKey: string, opts: {
+// Assinatura recorrente PIX — gera novo QR Code todo mês automaticamente
+export async function createPixSubscription(apiKey: string, opts: {
   name: string
   email: string
   cpf: string
@@ -47,52 +46,42 @@ export async function createPixAutomatic(apiKey: string, opts: {
 }) {
   const customerId = await getOrCreateCustomer(apiKey, opts.name, opts.email, opts.cpf)
 
-  const startDate = new Date()
-  startDate.setDate(startDate.getDate() + 1)
-  const startDateStr = startDate.toISOString().split('T')[0]
+  const nextDue = new Date()
+  nextDue.setDate(nextDue.getDate() + 1)
+  const nextDueStr = nextDue.toISOString().split('T')[0]
 
-  // 1. Criar autorização Pix Automático
-  const auth = await req(apiKey, 'POST', '/pix/automatic/authorizations', {
-    customer: customerId,
-    value: opts.amount,
-    frequency: 'MONTHLY',
-    startDate: startDateStr,
-    description: opts.description,
-    externalReference: opts.externalReference,
-    originType: 'IMMEDIATE_PAYMENT_AND_RECURRING_QR_CODE',
-  })
-
-  const authId = auth.id as string
-
-  // 2. Criar primeiro pagamento vinculado à autorização
-  const dueDate = new Date()
-  dueDate.setDate(dueDate.getDate() + 1)
-  const dueDateStr = dueDate.toISOString().split('T')[0]
-
-  const payment = await req(apiKey, 'POST', '/payments', {
+  // Cria assinatura mensal PIX
+  const subscription = await req(apiKey, 'POST', '/subscriptions', {
     customer: customerId,
     billingType: 'PIX',
     value: opts.amount,
-    dueDate: dueDateStr,
+    nextDueDate: nextDueStr,
+    cycle: 'MONTHLY',
     description: opts.description,
     externalReference: opts.externalReference,
-    pixAutomaticAuthorizationId: authId,
   })
 
-  const paymentId = payment.id as string
+  const subscriptionId = subscription.id as string
 
-  // 3. Buscar QR Code PIX do primeiro pagamento
+  // Busca a primeira cobrança gerada pela assinatura
+  const payments = await req(apiKey, 'GET', `/subscriptions/${subscriptionId}/payments`)
+  const firstPayment = (payments.data as Record<string, unknown>[] | undefined)?.[0]
+  if (!firstPayment?.id) throw new Error('Cobrança da assinatura não encontrada')
+
+  const paymentId = firstPayment.id as string
+
+  // Busca QR Code PIX da primeira cobrança
   const pixData = await req(apiKey, 'GET', `/payments/${paymentId}/pixQrCode`)
 
   return {
-    authorizationId: authId,
+    subscriptionId,
     paymentId,
     pixCode: pixData.payload as string,
     pixQrCode: pixData.encodedImage as string,
   }
 }
 
-// Cancela autorização Pix Automático
-export async function cancelPixAutomatic(apiKey: string, authorizationId: string) {
-  await req(apiKey, 'DELETE', `/pix/automatic/authorizations/${authorizationId}`)
+// Cancela assinatura
+export async function cancelSubscription(apiKey: string, subscriptionId: string) {
+  await req(apiKey, 'DELETE', `/subscriptions/${subscriptionId}`)
 }

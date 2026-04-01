@@ -1,7 +1,7 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 import type { Env } from '../../lib/types'
 import { getUser } from '../../lib/auth'
-import { createPixAutomatic } from '../../lib/asaas'
+import { createPixSubscription } from '../../lib/asaas'
 
 const PLAN_PRICES: Record<string, number> = {
   basic: 15.90,
@@ -24,7 +24,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
 
     const externalRef = `${user.id}:${plan}`
 
-    const charge = await createPixAutomatic(env.ASAAS_API_KEY, {
+    const charge = await createPixSubscription(env.ASAAS_API_KEY, {
       name: user.name,
       email: user.email,
       cpf,
@@ -33,11 +33,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
       externalReference: externalRef,
     })
 
-    // Salva authorization ID no banco
+    // Salva subscription ID no banco
     await env.DB.prepare(`
       INSERT INTO subscriptions (id, user_id, plan, status, syncpay_id, amount_cents)
       VALUES (lower(hex(randomblob(16))), ?, ?, 'active', ?, ?)
-    `).bind(user.id, plan, charge.authorizationId, Math.round(PLAN_PRICES[plan] * 100)).run()
+    `).bind(user.id, plan, charge.subscriptionId, Math.round(PLAN_PRICES[plan] * 100)).run()
 
     return json({
       paymentId: charge.paymentId,
