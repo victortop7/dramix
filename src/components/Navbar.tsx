@@ -82,8 +82,8 @@ export default function Navbar() {
             Início
           </Link>
 
-          {/* Categorias dropdown */}
-          <div ref={catRef} className="relative">
+          {/* Categorias dropdown — só para assinantes */}
+          {hasAccess() && <div ref={catRef} className="relative">
             <button
               onClick={() => setCatOpen(v => !v)}
               className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium"
@@ -127,7 +127,7 @@ export default function Navbar() {
                 ))}
               </div>
             )}
-          </div>
+          </div>}
 
           {user && (
             <Link to="/minha-lista"
