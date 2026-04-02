@@ -16,6 +16,7 @@ import Configuracoes from './pages/Configuracoes'
 import ForgotPassword from './pages/ForgotPassword'
 import Categoria from './pages/Categoria'
 import AuthGate from './components/AuthGate'
+import SubscribeBanner from './components/SubscribeBanner'
 import type { ReactNode } from 'react'
 
 function ChatWidget() {
@@ -25,6 +26,7 @@ function ChatWidget() {
     <>
       <WhatsAppChat />
       <RenewalWarning />
+      <SubscribeBanner />
     </>
   )
 }
