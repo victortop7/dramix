@@ -19,7 +19,7 @@ function saveAnonUsed(s: number) {
 
 export default function Watch() {
   const { id } = useParams<{ id: string }>()
-  const { user, profile } = useAuth()
+  const { user, profile, refreshUser } = useAuth()
   const navigate = useNavigate()
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -41,26 +41,37 @@ export default function Watch() {
   const isPaid = user && (user.plan === 'basic' || user.plan === 'premium' || user.isAdmin)
 
   const limit = isAnon ? ANON_LIMIT : FREE_LIMIT
-  const initialUsed = isAnon ? getAnonUsed() : (user?.freeSecondsUsed ?? 0)
-  const [liveUsed, setLiveUsed] = useState(initialUsed)
-  const liveUsedRef = useRef(initialUsed)
+  const [liveUsed, setLiveUsed] = useState(isAnon ? getAnonUsed() : 0)
+  const liveUsedRef = useRef(isAnon ? getAnonUsed() : 0)
 
   const freeLeft = Math.max(0, limit - liveUsed)
   const freeLeftMin = Math.ceil(freeLeft / 60)
 
-  // Carrega o drama (sem exigir login)
+  // Carrega o drama + busca segundos atualizados do banco
   useEffect(() => {
     if (!id) return
-    // Se já esgotou o trial e não é pago, mostra paywall direto
-    if (isFree && !isPaid && getAnonUsed() >= ANON_LIMIT && !user) {
+
+    // Anônimo — checa localStorage
+    if (!user && getAnonUsed() >= ANON_LIMIT) {
       setLoading(false)
       setShowPaywall(true)
       return
     }
-    if (isFree && !isPaid && (user?.freeSecondsUsed ?? 0) >= FREE_LIMIT && user) {
-      setLoading(false)
-      setShowPaywall(true)
-      return
+
+    // Logado free — busca valor FRESCO do banco antes de qualquer coisa
+    if (user && isFree && !isPaid) {
+      refreshUser().then(() => {
+        // após refreshUser o contexto atualiza, mas precisamos ler direto
+        api.auth.me().then(({ user: freshUser }) => {
+          const used = freshUser.freeSecondsUsed ?? 0
+          setLiveUsed(used)
+          liveUsedRef.current = used
+          if (used >= FREE_LIMIT) {
+            setLoading(false)
+            setShowPaywall(true)
+          }
+        }).catch(() => {})
+      })
     }
 
     api.dramas.get(id)
