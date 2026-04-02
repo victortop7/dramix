@@ -15,6 +15,7 @@ import Admin from './pages/Admin'
 import Configuracoes from './pages/Configuracoes'
 import ForgotPassword from './pages/ForgotPassword'
 import Categoria from './pages/Categoria'
+import AuthGate from './components/AuthGate'
 import type { ReactNode } from 'react'
 
 function ChatWidget() {
@@ -36,7 +37,7 @@ function RequireAuth({ children }: { children: ReactNode }) {
         style={{ animation: 'spin 0.8s linear infinite' }} />
     </div>
   )
-  if (!user) return <Navigate to="/login" replace />
+  if (!user) return <AuthGate />
   return <>{children}</>
 }
 
