@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head><title>Gerar Ícones Dramix</title></head>
+<body style="font-family:sans-serif;padding:20px;background:#111;color:#fff">
+<h2>Gerador de Ícones PWA — Dramix</h2>
+<p>Clique em "Gerar e Baixar" para baixar todos os ícones.</p>
+<button onclick="generateAll()" style="background:#e11d48;color:#fff;border:none;padding:12px 24px;border-radius:8px;font-size:16px;cursor:pointer;font-weight:bold">
+  Gerar e Baixar Todos os Ícones
+</button>
+<div id="status" style="margin-top:16px;color:#aaa"></div>
+<div id="previews" style="display:flex;flex-wrap:wrap;gap:16px;margin-top:24px"></div>
+
+<script>
+const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#e11d48"/>
+  <polygon points="180,140 390,256 180,372" fill="white"/>
+</svg>`
+
+const sizes = [72, 96, 128, 144, 152, 192, 384, 512]
+
+function generateIcon(size) {
+  return new Promise(resolve => {
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, size, size)
+      URL.revokeObjectURL(url)
+      canvas.toBlob(b => {
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(b)
+        a.download = `icon-${size}.png`
+        a.click()
+        resolve()
+      }, 'image/png')
+    }
+    img.src = url
+  })
+}
+
+async function generateAll() {
+  const status = document.getElementById('status')
+  const previews = document.getElementById('previews')
+  previews.innerHTML = ''
+  for (const size of sizes) {
+    status.textContent = `Gerando ${size}x${size}...`
+    await generateIcon(size)
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' })
+    const url = URL.createObjectURL(blob)
+    const img = new Image()
+    img.src = url
+    img.style = `width:${Math.min(size,96)}px;height:${Math.min(size,96)}px;border-radius:8px`
+    const label = document.createElement('p')
+    label.textContent = `${size}x${size}`
+    label.style = 'color:#aaa;font-size:12px;text-align:center;margin:4px 0 0'
+    const div = document.createElement('div')
+    div.style = 'text-align:center'
+    div.appendChild(img)
+    div.appendChild(label)
+    previews.appendChild(div)
+    await new Promise(r => setTimeout(r, 200))
+  }
+  status.textContent = '✅ Todos os ícones baixados! Mova os arquivos para a pasta public/icons/'
+}
+</script>
+</body>
+</html>
