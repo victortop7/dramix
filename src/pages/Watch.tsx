@@ -168,16 +168,37 @@ export default function Watch() {
   }
 
   const toggleFullscreen = () => {
-    const video = videoRef.current as HTMLVideoElement & { webkitEnterFullscreen?: () => void; webkitRequestFullscreen?: () => void }
-    const container = containerRef.current as HTMLDivElement & { webkitRequestFullscreen?: () => void }
-    if (!document.fullscreenElement && !(document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement) {
-      if (video?.webkitEnterFullscreen) video.webkitEnterFullscreen()
-      else if (container?.requestFullscreen) void container.requestFullscreen()
-      else if (container?.webkitRequestFullscreen) container.webkitRequestFullscreen()
+    type AnyEl = HTMLElement & { webkitRequestFullscreen?: () => void; mozRequestFullScreen?: () => void; msRequestFullscreen?: () => void; webkitEnterFullscreen?: () => void }
+    type AnyDoc = Document & { webkitFullscreenElement?: Element; mozFullScreenElement?: Element; webkitExitFullscreen?: () => void; mozCancelFullScreen?: () => void; msExitFullscreen?: () => void }
+
+    const video = videoRef.current as AnyEl | null
+    const container = containerRef.current as AnyEl | null
+    const doc = document as AnyDoc
+
+    const isFullscreen = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.mozFullScreenElement)
+
+    if (!isFullscreen) {
+      // Tenta no container primeiro (melhor para TV box Android)
+      if (container?.requestFullscreen) {
+        void container.requestFullscreen()
+      } else if (container?.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen()
+      } else if (container?.mozRequestFullScreen) {
+        container.mozRequestFullScreen()
+      } else if (container?.msRequestFullscreen) {
+        container.msRequestFullscreen()
+      } else if (video?.requestFullscreen) {
+        // Fallback: fullscreen no elemento de vídeo
+        void video.requestFullscreen()
+      } else if (video?.webkitEnterFullscreen) {
+        // iOS Safari
+        video.webkitEnterFullscreen()
+      }
     } else {
-      const doc = document as Document & { webkitExitFullscreen?: () => void }
       if (doc.exitFullscreen) void doc.exitFullscreen()
       else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen()
+      else if (doc.mozCancelFullScreen) doc.mozCancelFullScreen()
+      else if (doc.msExitFullscreen) doc.msExitFullscreen()
     }
   }
 
