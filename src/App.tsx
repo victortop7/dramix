@@ -61,14 +61,12 @@ export default function App() {
             <RequireAuth><SelectProfile /></RequireAuth>
           } />
           <Route path="/assinatura" element={<Subscription />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/drama/:id" element={<DramaDetail />} />
-          <Route path="/watch/:id" element={<Watch />} />
-          <Route path="/minha-lista" element={
-            <RequireAuth><MyList /></RequireAuth>
-          } />
-          <Route path="/categoria/:slug" element={<Categoria />} />
-          <Route path="/buscar" element={<Search />} />
+          <Route path="/home" element={<RequireAuth><Home /></RequireAuth>} />
+          <Route path="/drama/:id" element={<RequireAuth><DramaDetail /></RequireAuth>} />
+          <Route path="/watch/:id" element={<RequireAuth><Watch /></RequireAuth>} />
+          <Route path="/minha-lista" element={<RequireAuth><MyList /></RequireAuth>} />
+          <Route path="/categoria/:slug" element={<RequireAuth><Categoria /></RequireAuth>} />
+          <Route path="/buscar" element={<RequireAuth><Search /></RequireAuth>} />
           <Route path="/configuracoes" element={
             <RequireAuth><Configuracoes /></RequireAuth>
           } />
