@@ -5,10 +5,9 @@ import type { FeaturedDrama } from '../types'
 
 interface Props {
   dramas: FeaturedDrama[]
-  allThumbnails?: string[]
 }
 
-export default function HeroSection({ dramas, allThumbnails = [] }: Props) {
+export default function HeroSection({ dramas }: Props) {
   const navigate = useNavigate()
   const [index, setIndex] = useState(0)
   const [transitioning, setTransitioning] = useState(false)
@@ -34,25 +33,11 @@ export default function HeroSection({ dramas, allThumbnails = [] }: Props) {
   if (!dramas.length) return null
   const drama = dramas[index]
 
-  // Gera grid de thumbnails repetindo até ter pelo menos 40 itens
-  const mosaicThumbs = allThumbnails.length > 0
-    ? Array.from({ length: 40 }, (_, i) => allThumbnails[i % allThumbnails.length])
-    : []
-
   return (
     <div className="relative w-full overflow-hidden"
       style={{ height: 'clamp(480px, 62vw, 680px)', marginTop: 'var(--navbar-h)' }}>
 
-      {/* Mosaico Netflix-style */}
-      {mosaicThumbs.length > 0 && (
-        <div className="absolute inset-0" style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 4, opacity: 0.35, transform: 'scale(1.05)' }}>
-          {mosaicThumbs.map((url, i) => (
-            <img key={i} src={url} alt="" className="w-full h-full object-cover" style={{ aspectRatio: '2/3' }} />
-          ))}
-        </div>
-      )}
-
-      {/* Background image do destaque (sobre o mosaico) */}
+      {/* Background image */}
       {drama.thumbnailUrl && (
         <img
           key={drama.id}
@@ -61,8 +46,8 @@ export default function HeroSection({ dramas, allThumbnails = [] }: Props) {
           className="absolute inset-0 w-full h-full object-cover"
           style={{
             objectPosition: 'center 15%',
-            filter: 'brightness(0.45)',
-            opacity: transitioning ? 0 : 0.7,
+            filter: 'brightness(0.6)',
+            opacity: transitioning ? 0 : 1,
             transition: 'opacity 0.4s ease',
           }}
         />
