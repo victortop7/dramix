@@ -58,7 +58,7 @@ export default function Home() {
       {loading ? (
         <div className="skeleton w-full" style={{ height: 'clamp(380px, 55vw, 560px)', marginTop: 'var(--navbar-h)' }} />
       ) : featured.length > 0 ? (
-        <HeroSection dramas={featured} />
+        <HeroSection dramas={featured} allThumbnails={categories.flatMap(c => c.dramas.map(d => d.thumbnailUrl)).filter(Boolean) as string[]} />
       ) : (
         <div className="w-full flex items-center justify-center"
           style={{ height: 'clamp(380px, 55vw, 560px)', marginTop: 'var(--navbar-h)', background: 'var(--surface)' }}>
