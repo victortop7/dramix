@@ -4,3 +4,9 @@ dist
 .env
 *.local
 .wrangler
+
+# Android build
+app/build/
+*.apk
+*.aab
+android.keystore
