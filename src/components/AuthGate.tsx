@@ -1,14 +1,36 @@
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { Play, Crown, Star } from 'lucide-react'
+import { api } from '../lib/api'
 
 export default function AuthGate() {
   const navigate = useNavigate()
+  const [thumbs, setThumbs] = useState<string[]>([])
+
+  useEffect(() => {
+    api.dramas.byCategory().then(({ categories }) => {
+      const urls = categories.flatMap((c: any) => c.dramas.map((d: any) => d.thumbnailUrl)).filter(Boolean)
+      if (urls.length > 0) setThumbs(Array.from({ length: 48 }, (_: unknown, i: number) => urls[i % urls.length]))
+    }).catch(() => {})
+  }, [])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(10,10,15,0.88)', backdropFilter: 'blur(12px)' }}>
+      style={{ background: 'rgba(10,10,15,0.6)' }}>
 
-      <div className="w-full max-w-sm fade-up">
+      {/* Mosaico de thumbnails */}
+      {thumbs.length > 0 && (
+        <div className="absolute inset-0 overflow-hidden" style={{ zIndex: 0 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 3, opacity: 0.25, transform: 'scale(1.05)', height: '100%' }}>
+            {thumbs.map((url, i) => (
+              <img key={i} src={url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ))}
+          </div>
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(10,10,15,0.5) 0%, rgba(10,10,15,0.7) 100%)' }} />
+        </div>
+      )}
+
+      <div className="w-full max-w-sm fade-up" style={{ position: 'relative', zIndex: 1 }}>
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
