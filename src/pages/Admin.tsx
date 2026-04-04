@@ -64,7 +64,7 @@ export default function Admin() {
   interface Member {
     id: string; name: string; email: string; whatsapp: string | null
     plan: string; planExpiresAt: string | null; status: 'free' | 'active' | 'overdue'
-    profileCount: number; createdAt: string
+    profileCount: number; freeSecondsUsed: number; createdAt: string
   }
   interface MemberSummary { total: number; active: number; free: number; overdue: number; basic: number; premium: number }
   const [members, setMembers] = useState<Member[]>([])
@@ -481,19 +481,37 @@ export default function Admin() {
                                 <td className="px-4 py-3 text-xs" style={{ color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
                                   {regDate}
                                 </td>
+                                <td className="px-4 py-3 text-xs" style={{ fontFamily: 'var(--mono)', color: 'var(--text-dim)' }}>
+                                  {m.plan === 'free' ? (
+                                    <span style={{ color: m.freeSecondsUsed >= 1800 ? 'var(--red)' : 'var(--text-dim)' }}>
+                                      {Math.floor(m.freeSecondsUsed / 60)}m / 30m
+                                    </span>
+                                  ) : '—'}
+                                </td>
                                 <td className="px-4 py-3">
-                                  <button
-                                    onClick={() => {
-                                      const pwd = prompt(`Nova senha para ${m.name}:`)
-                                      if (!pwd || pwd.length < 6) { alert('Senha deve ter pelo menos 6 caracteres'); return }
-                                      api.admin.resetMemberPassword(m.id, pwd)
-                                        .then(() => alert(`Senha de ${m.name} redefinida com sucesso!`))
-                                        .catch(e => alert(`Erro: ${e instanceof Error ? e.message : String(e)}`))
-                                    }}
-                                    className="text-xs px-2 py-1 rounded-lg"
-                                    style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text-dim)', cursor: 'pointer' }}>
-                                    🔑 Reset
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    {m.whatsapp && (
+                                      <a
+                                        href={`https://wa.me/55${m.whatsapp.replace(/\D/g, '')}`}
+                                        target="_blank" rel="noreferrer"
+                                        className="text-xs px-2 py-1 rounded-lg"
+                                        style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)', cursor: 'pointer', textDecoration: 'none' }}>
+                                        💬 WhatsApp
+                                      </a>
+                                    )}
+                                    <button
+                                      onClick={() => {
+                                        const pwd = prompt(`Nova senha para ${m.name}:`)
+                                        if (!pwd || pwd.length < 6) { alert('Senha deve ter pelo menos 6 caracteres'); return }
+                                        api.admin.resetMemberPassword(m.id, pwd)
+                                          .then(() => alert(`Senha de ${m.name} redefinida com sucesso!`))
+                                          .catch(e => alert(`Erro: ${e instanceof Error ? e.message : String(e)}`))
+                                      }}
+                                      className="text-xs px-2 py-1 rounded-lg"
+                                      style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text-dim)', cursor: 'pointer' }}>
+                                      🔑 Reset
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             )

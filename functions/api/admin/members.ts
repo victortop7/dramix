@@ -17,6 +17,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
       SELECT
         u.id, u.name, u.email, u.whatsapp,
         u.plan, u.plan_expires_at, u.created_at,
+        u.free_seconds_used,
         COUNT(DISTINCT p.id) as profile_count
       FROM users u
       LEFT JOIN profiles p ON p.user_id = u.id
@@ -48,6 +49,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
         planExpiresAt: expiresAt,
         status,
         profileCount: r.profile_count,
+        freeSecondsUsed: r.free_seconds_used ?? 0,
         createdAt: r.created_at,
       }
     })
