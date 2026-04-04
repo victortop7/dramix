@@ -271,7 +271,7 @@ export default function Watch() {
       </div>
 
       {/* Video */}
-      <div className="flex-1 flex items-center justify-center" onClick={togglePlay}>
+      <div className="flex-1 flex items-center justify-center relative" onClick={togglePlay}>
         <video
           ref={videoRef}
           src={drama.videoUrl}
@@ -284,6 +284,21 @@ export default function Watch() {
           muted={muted}
           playsInline
         />
+        {/* Botão grande de play no centro */}
+        {!playing && !showPaywall && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div style={{
+              width: 72, height: 72, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.18)',
+              backdropFilter: 'blur(6px)',
+              border: '2px solid rgba(255,255,255,0.35)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            }}>
+              <Play size={32} fill="white" color="white" style={{ marginLeft: 4 }} />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Banner trial — só aparece quando falta pouco tempo */}
