@@ -158,7 +158,7 @@ export const api = {
       members: Array<{
         id: string; name: string; email: string; whatsapp: string | null
         plan: string; planExpiresAt: string | null; status: 'free' | 'active' | 'overdue'
-        profileCount: number; createdAt: string
+        profileCount: number; freeSecondsUsed: number; createdAt: string
       }>
       summary: { total: number; active: number; free: number; overdue: number; basic: number; premium: number }
     }>('/admin/members'),
