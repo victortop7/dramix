@@ -489,7 +489,7 @@ export default function Admin() {
                                   ) : '—'}
                                 </td>
                                 <td className="px-4 py-3">
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 flex-wrap">
                                     {m.whatsapp && (
                                       <a
                                         href={`https://wa.me/55${m.whatsapp.replace(/\D/g, '')}`}
@@ -498,6 +498,28 @@ export default function Admin() {
                                         style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)', cursor: 'pointer', textDecoration: 'none' }}>
                                         💬 WhatsApp
                                       </a>
+                                    )}
+                                    {m.planExpiresAt !== '2099-12-31T23:59:59.000Z' && (
+                                      <button
+                                        onClick={() => {
+                                          if (!confirm(`Tornar ${m.name} VIP Vitalício?\n\nEle terá acesso Premium para sempre, sem pagar mensalidade.`)) return
+                                          api.admin.setVip(m.id)
+                                            .then(() => {
+                                              alert(`${m.name} agora é VIP Vitalício! ⭐`)
+                                              setMembers(prev => prev.map(x => x.id === m.id ? { ...x, plan: 'premium', planExpiresAt: '2099-12-31T23:59:59.000Z', status: 'active' } : x))
+                                            })
+                                            .catch(e => alert(`Erro: ${e instanceof Error ? e.message : String(e)}`))
+                                        }}
+                                        className="text-xs px-2 py-1 rounded-lg"
+                                        style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', color: 'var(--amber)', cursor: 'pointer' }}>
+                                        ⭐ VIP
+                                      </button>
+                                    )}
+                                    {m.planExpiresAt === '2099-12-31T23:59:59.000Z' && (
+                                      <span className="text-xs px-2 py-1 rounded-lg"
+                                        style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', color: 'var(--amber)' }}>
+                                        ⭐ Vitalício
+                                      </span>
                                     )}
                                     <button
                                       onClick={() => {

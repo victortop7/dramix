@@ -150,6 +150,10 @@ export const api = {
         body: JSON.stringify({ key, uploadId, parts }),
       }),
     listDramas: () => request<{ dramas: import('../types').Drama[] }>('/admin/dramas'),
+    setVip: (userId: string) =>
+      request<{ success: boolean }>('/admin/set-vip', {
+        method: 'POST', body: JSON.stringify({ userId }),
+      }),
     resetMemberPassword: (userId: string, newPassword: string) =>
       request<{ success: boolean }>('/admin/reset-member-password', {
         method: 'POST', body: JSON.stringify({ userId, newPassword }),
