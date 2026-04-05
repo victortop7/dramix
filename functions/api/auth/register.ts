@@ -14,6 +14,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     const existing = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email.toLowerCase()).first()
     if (existing) return json({ error: 'Este email já está cadastrado' }, 409)
 
+    if (whatsapp) {
+      const digits = whatsapp.replace(/\D/g, '')
+      const existingPhone = await env.DB.prepare("SELECT id FROM users WHERE replace(replace(replace(replace(whatsapp,' ',''),'-',''),'(',''),')','') = ?").bind(digits).first()
+      if (existingPhone) return json({ error: 'Este número de WhatsApp já está cadastrado' }, 409)
+    }
+
     const id = crypto.randomUUID()
     const hash = await hashPassword(password)
 
@@ -37,5 +43,5 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status, headers: { 'Content-Type': 'application/json' },
-  })
+  }) as unknown as import('@cloudflare/workers-types').Response
 }
