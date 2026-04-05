@@ -15,6 +15,8 @@ import Admin from './pages/Admin'
 import Configuracoes from './pages/Configuracoes'
 import ForgotPassword from './pages/ForgotPassword'
 import Categoria from './pages/Categoria'
+import Termos from './pages/Termos'
+import Privacidade from './pages/Privacidade'
 import AuthGate from './components/AuthGate'
 import SubscribeBanner from './components/SubscribeBanner'
 import type { ReactNode } from 'react'
@@ -76,6 +78,8 @@ export default function App() {
           <Route path="/vs2423" element={
             <RequireAdmin><Admin /></RequireAdmin>
           } />
+          <Route path="/termos" element={<Termos />} />
+          <Route path="/privacidade" element={<Privacidade />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
       </BrowserRouter>
