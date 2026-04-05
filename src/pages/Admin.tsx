@@ -490,15 +490,48 @@ export default function Admin() {
                                 </td>
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2 flex-wrap">
-                                    {m.whatsapp && (
-                                      <a
-                                        href={`https://wa.me/55${m.whatsapp.replace(/\D/g, '')}`}
-                                        target="_blank" rel="noreferrer"
-                                        className="text-xs px-2 py-1 rounded-lg"
-                                        style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)', cursor: 'pointer', textDecoration: 'none' }}>
-                                        💬 WhatsApp
-                                      </a>
-                                    )}
+                                    {m.whatsapp && (() => {
+                                      const phone = `55${m.whatsapp.replace(/\D/g, '')}`
+                                      const nome = m.name.split(' ')[0]
+                                      const minUsed = Math.floor(m.freeSecondsUsed / 60)
+                                      const minLeft = 30 - minUsed
+
+                                      const msgs = [
+                                        // 1 — Zerado, nunca assistiu
+                                        `Oi ${nome}! 👋 Vi que você se cadastrou no *Dramix* mas ainda não assistiu nenhum drama.\n\nVocê tem *30 minutos grátis* esperando por você! 🎬\n\nÉ só entrar e começar a assistir agora mesmo 👇\n🔗 https://dramixapp.com`,
+                                        // 2 — Assistiu mas não terminou
+                                        `Oi ${nome}! 😊 Vi que você começou a assistir no *Dramix* mas ainda tem *${minLeft} minutos grátis* disponíveis!\n\nVolte e continue de onde parou, tem muito drama bom te esperando 🎬\n\n👇 https://dramixapp.com`,
+                                        // 3 — Trial esgotado
+                                        `Oi ${nome}! 🌟 Você já usou seus 30 minutos grátis no *Dramix*!\n\nQue tal assinar e continuar assistindo *sem limites*? 😍\n\n💎 Plano Básico por apenas *R$12,90/mês*\n\nAcesse agora e escolha seu plano 👇\n🔗 https://dramixapp.com/assinatura`,
+                                      ]
+
+                                      return (
+                                        <div className="flex flex-col gap-1">
+                                          <a href={`https://wa.me/${phone}`} target="_blank" rel="noreferrer"
+                                            className="text-xs px-2 py-1 rounded-lg text-center"
+                                            style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)', color: 'var(--green)', textDecoration: 'none' }}>
+                                            💬 WhatsApp
+                                          </a>
+                                          <div className="flex gap-1">
+                                            {msgs.map((msg, idx) => (
+                                              <a key={idx}
+                                                href={`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`}
+                                                target="_blank" rel="noreferrer"
+                                                title={['Nunca assistiu', 'Não terminou o trial', 'Trial esgotado — enviar link'][idx]}
+                                                className="text-xs px-2 py-0.5 rounded font-bold"
+                                                style={{
+                                                  background: idx === 0 ? 'rgba(59,130,246,0.15)' : idx === 1 ? 'rgba(245,158,11,0.15)' : 'rgba(225,29,72,0.15)',
+                                                  border: `1px solid ${idx === 0 ? 'rgba(59,130,246,0.4)' : idx === 1 ? 'rgba(245,158,11,0.4)' : 'rgba(225,29,72,0.4)'}`,
+                                                  color: idx === 0 ? 'var(--accent)' : idx === 1 ? 'var(--amber)' : 'var(--red)',
+                                                  textDecoration: 'none',
+                                                }}>
+                                                {idx + 1}
+                                              </a>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )
+                                    })()}
                                     {m.planExpiresAt !== '2099-12-31T23:59:59.000Z' && (
                                       <button
                                         onClick={() => {
