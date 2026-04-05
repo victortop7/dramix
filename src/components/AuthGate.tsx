@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { Play, Crown, Star } from 'lucide-react'
+import { Play, Crown, Zap } from 'lucide-react'
 import { api } from '../lib/api'
 
 export default function AuthGate() {
   const navigate = useNavigate()
   const [thumbs, setThumbs] = useState<string[]>([])
+  const [showRegisterHint, setShowRegisterHint] = useState(false)
 
   useEffect(() => {
     api.dramas.byCategory().then(({ categories }) => {
@@ -44,19 +45,19 @@ export default function AuthGate() {
         <div className="rounded-3xl overflow-hidden"
           style={{ background: 'rgba(18,18,24,0.95)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 32px 80px rgba(0,0,0,0.7)' }}>
 
-          {/* Banner 30 min grátis */}
+          {/* Banner preço */}
           <div className="px-6 py-5 text-center"
             style={{ background: 'linear-gradient(135deg, rgba(225,29,72,0.2), rgba(225,29,72,0.05))', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-3"
               style={{ background: 'rgba(225,29,72,0.15)', border: '1px solid rgba(225,29,72,0.3)' }}>
-              <Star size={12} fill="#e11d48" color="#e11d48" />
-              <span className="text-xs font-bold" style={{ color: '#fb3060' }}>GRÁTIS</span>
+              <Crown size={12} fill="#e11d48" color="#e11d48" />
+              <span className="text-xs font-bold" style={{ color: '#fb3060' }}>ASSINE AGORA</span>
             </div>
             <p className="text-2xl font-extrabold mb-1" style={{ color: '#fff' }}>
-              30 minutos grátis
+              A partir de R$12,90
             </p>
             <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              Crie sua conta e assista agora mesmo
+              Plano básico — acesso ilimitado
             </p>
           </div>
 
@@ -75,15 +76,26 @@ export default function AuthGate() {
 
           {/* Botões */}
           <div className="px-6 py-5 flex flex-col gap-3">
-            <button
-              onClick={() => navigate('/register')}
-              className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
-              style={{ background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s', boxShadow: '0 4px 20px rgba(225,29,72,0.4)' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--accent-hover)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'var(--accent)')}>
-              <Crown size={15} />
-              Criar conta grátis — 30 min grátis
-            </button>
+            {/* Teste grátis */}
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={() => { setShowRegisterHint(true); navigate('/register') }}
+                className="w-full py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2"
+                style={{ background: 'var(--accent)', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s', boxShadow: '0 4px 20px rgba(225,29,72,0.4)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--accent-hover)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'var(--accent)')}>
+                <Zap size={15} fill="white" />
+                Teste grátis
+              </button>
+              {showRegisterHint && (
+                <p className="text-center text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  ⚡ Cadastro rápido, leva menos de 1 minuto!
+                </p>
+              )}
+              <p className="text-center text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                ⚡ Cadastro rápido, leva menos de 1 minuto!
+              </p>
+            </div>
 
             <button
               onClick={() => navigate('/login')}
@@ -97,7 +109,7 @@ export default function AuthGate() {
         </div>
 
         <p className="text-center text-xs mt-4" style={{ color: 'rgba(255,255,255,0.25)' }}>
-          Planos a partir de R$15,90/mês após o período grátis
+          Planos: Básico R$12,90/mês · Premium R$24,90/mês
         </p>
       </div>
     </div>

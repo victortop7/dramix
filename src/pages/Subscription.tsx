@@ -8,7 +8,7 @@ const plans = [
   {
     id: 'basic' as const,
     name: 'Básico',
-    price: 'R$ 15,90',
+    price: 'R$ 12,90',
     icon: <Star size={22} style={{ color: 'var(--blue)' }} />,
     description: 'Acesso Completo e Sem Limites.',
     highlight: false,
@@ -22,7 +22,7 @@ const plans = [
   {
     id: 'premium' as const,
     name: 'Premium',
-    price: 'R$ 29,90',
+    price: 'R$ 24,90',
     icon: <Crown size={22} style={{ color: '#f59e0b' }} />,
     description: 'Acesso Completo, Sem Limites e todos os Benefícios Exclusivos.',
     highlight: true,

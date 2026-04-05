@@ -71,7 +71,7 @@ export default function RenewalWarning() {
 
   const isGrace = daysLeft <= 0
   const planLabel = user?.plan === 'premium' ? 'Premium' : 'Básico'
-  const price = user?.plan === 'premium' ? 'R$29,90' : 'R$15,90'
+  const price = user?.plan === 'premium' ? 'R$24,90' : 'R$12,90'
 
   const PixContent = () => (
     <div>

@@ -196,7 +196,7 @@ export default function Configuracoes() {
 
           {user.plan === 'free' && (
             <button className="btn-primary text-sm w-full justify-center" onClick={() => navigate('/assinatura')}>
-              <Crown size={14} /> Assinar agora — R$15,90/mês
+              <Crown size={14} /> Assinar agora — R$12,90/mês
             </button>
           )}
           {(user.plan === 'basic' || user.plan === 'premium') && (

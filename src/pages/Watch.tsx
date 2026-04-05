@@ -234,7 +234,7 @@ export default function Watch() {
           <p className="text-sm" style={{ color: 'var(--text-dim)' }}>Assine o Dramix e continue assistindo sem limites.</p>
         </div>
         <button className="btn-primary w-full py-3 text-sm font-semibold" onClick={() => navigate('/assinatura')}>
-          Ver planos — a partir de R$15,90/mês
+          Ver planos — a partir de R$12,90/mês
         </button>
         <button className="text-xs" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
           onClick={() => navigate('/home')}>Voltar para o início</button>
@@ -333,7 +333,7 @@ export default function Watch() {
               </p>
             </div>
             <button className="btn-primary w-full py-3 text-sm font-semibold" onClick={() => navigate('/assinatura')}>
-              Ver planos — a partir de R$15,90/mês
+              Ver planos — a partir de R$12,90/mês
             </button>
             {isAnon && (
               <button className="w-full py-3 text-sm font-semibold rounded-xl"

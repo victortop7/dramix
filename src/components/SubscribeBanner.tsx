@@ -27,7 +27,7 @@ export default function SubscribeBanner() {
         <Crown size={15} color="#fff" />
         <p className="text-xs sm:text-sm font-semibold text-white truncate">
           <span className="hidden sm:inline">Você tem 30 min grátis — </span>
-          Assine a partir de R$15,90/mês e assista sem limites
+          Assine a partir de R$12,90/mês e assista sem limites
         </p>
       </div>
 
