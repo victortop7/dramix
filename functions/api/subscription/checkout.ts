@@ -4,8 +4,8 @@ import { getUser } from '../../lib/auth'
 import { createPixSubscription } from '../../lib/asaas'
 
 const PLAN_PRICES: Record<string, number> = {
-  basic: 15.90,
-  premium: 29.90,
+  basic: 12.90,
+  premium: 24.90,
 }
 
 const PLAN_NAMES: Record<string, string> = {
