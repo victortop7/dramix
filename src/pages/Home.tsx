@@ -4,6 +4,7 @@ import { Play } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import HeroSection from '../components/HeroSection'
 import CategoryRow from '../components/CategoryRow'
+import Top10Row from '../components/Top10Row'
 import WelcomeModal from '../components/WelcomeModal'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -17,6 +18,8 @@ export default function Home() {
   const [continueWatching, setContinueWatching] = useState<WatchProgress[]>([])
   const [loading, setLoading] = useState(true)
   const [showWelcome, setShowWelcome] = useState(false)
+  const [top10, setTop10] = useState<Array<{ rank: number; id: string; title: string; thumbnailUrl: string | null; views: number; isDubbed: boolean; isNew: boolean }>>([])
+
 
   // Mostra modal só para visitantes sem conta, após auth carregar, e só uma vez por dispositivo
   useEffect(() => {
@@ -30,9 +33,11 @@ export default function Home() {
     Promise.all([
       api.dramas.featured().catch(() => ({ dramas: [], drama: null })),
       api.dramas.byCategory().catch(() => ({ categories: [] })),
-    ]).then(([{ dramas: feat }, { categories: cats }]) => {
+      api.dramas.top10().catch(() => ({ dramas: [] })),
+    ]).then(([{ dramas: feat }, { categories: cats }, { dramas: t10 }]) => {
       setFeatured((feat ?? []) as FeaturedDrama[])
       setCategories(cats)
+      setTop10(t10)
     }).finally(() => setLoading(false))
   }, [])
 
@@ -131,6 +136,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Top 10 */}
+      {!loading && top10.length > 0 && <Top10Row dramas={top10} />}
 
       {/* Category rows */}
       <div className="pb-16 mt-6">

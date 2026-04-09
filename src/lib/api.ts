@@ -68,6 +68,7 @@ export const api = {
       ),
     get: (id: string) => request<{ drama: import('../types').Drama }>(`/dramas/${id}`),
     search: (q: string) => request<{ dramas: import('../types').Drama[] }>(`/dramas/search?q=${encodeURIComponent(q)}`),
+    top10: () => request<{ dramas: Array<{ rank: number; id: string; title: string; thumbnailUrl: string | null; views: number; isDubbed: boolean; isNew: boolean }> }>('/dramas/top10'),
     incrementView: (id: string) =>
       request<{ views: number }>(`/dramas/${id}/view`, { method: 'POST' }),
   },
