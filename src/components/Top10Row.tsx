@@ -45,7 +45,6 @@ export default function Top10Row({ dramas }: Props) {
                 lineHeight: 1,
                 color: 'transparent',
                 WebkitTextStroke: '2px rgba(255,255,255,0.55)',
-                textStroke: '2px rgba(255,255,255,0.55)',
                 userSelect: 'none',
                 marginRight: -12,
                 zIndex: 1,
