@@ -416,14 +416,26 @@ export default function Admin() {
 
                 {/* Exportar para Meta Ads */}
                 <div className="mb-4 flex justify-end">
-                  <a
-                    href="/api/admin/export-contacts"
-                    download="dramix-contatos-meta-ads.csv"
+                  <button
+                    onClick={async () => {
+                      const token = localStorage.getItem('dramix_token')
+                      const res = await fetch('/api/admin/export-contacts', {
+                        headers: { 'Authorization': `Bearer ${token ?? ''}` },
+                      })
+                      if (!res.ok) return alert('Erro ao exportar')
+                      const blob = await res.blob()
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = 'dramix-contatos-meta-ads.csv'
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    }}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
                     style={{ background: 'var(--accent-dim)', border: '1px solid var(--accent)', color: 'var(--accent)', fontFamily: 'var(--mono)' }}
                   >
                     ⬇ Exportar CSV Meta Ads
-                  </a>
+                  </button>
                 </div>
 
                 {/* Filtros */}
