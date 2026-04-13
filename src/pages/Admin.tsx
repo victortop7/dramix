@@ -414,6 +414,18 @@ export default function Admin() {
                   </div>
                 )}
 
+                {/* Exportar para Meta Ads */}
+                <div className="mb-4 flex justify-end">
+                  <a
+                    href="/api/admin/export-contacts"
+                    download="dramix-contatos-meta-ads.csv"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+                    style={{ background: 'var(--accent-dim)', border: '1px solid var(--accent)', color: 'var(--accent)', fontFamily: 'var(--mono)' }}
+                  >
+                    ⬇ Exportar CSV Meta Ads
+                  </a>
+                </div>
+
                 {/* Filtros */}
                 <div className="flex flex-wrap gap-2 mb-4">
                   {(['all', 'active', 'overdue', 'free'] as const).map(f => (
