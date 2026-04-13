@@ -5,7 +5,7 @@ import { getUser } from '../../lib/auth'
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const user = await getUser(request as unknown as Request, env)
-    if (!user || !user.isAdmin) {
+    if (!user || !user.is_admin) {
       return new Response('Unauthorized', { status: 401 }) as unknown as import('@cloudflare/workers-types').Response
     }
 
