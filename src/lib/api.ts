@@ -155,6 +155,10 @@ export const api = {
       request<{ success: boolean }>('/admin/set-vip', {
         method: 'POST', body: JSON.stringify({ userId }),
       }),
+    setAdmin: (userId: string, makeAdmin: boolean) =>
+      request<{ success: boolean }>('/admin/set-admin', {
+        method: 'POST', body: JSON.stringify({ userId, makeAdmin }),
+      }),
     resetMemberPassword: (userId: string, newPassword: string) =>
       request<{ success: boolean }>('/admin/reset-member-password', {
         method: 'POST', body: JSON.stringify({ userId, newPassword }),
@@ -163,7 +167,7 @@ export const api = {
       members: Array<{
         id: string; name: string; email: string; whatsapp: string | null
         plan: string; planExpiresAt: string | null; status: 'free' | 'active' | 'overdue'
-        profileCount: number; freeSecondsUsed: number; createdAt: string
+        profileCount: number; freeSecondsUsed: number; createdAt: string; isAdmin: boolean
       }>
       summary: { total: number; active: number; free: number; overdue: number; basic: number; premium: number }
     }>('/admin/members'),

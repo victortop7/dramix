@@ -64,7 +64,7 @@ export default function Admin() {
   interface Member {
     id: string; name: string; email: string; whatsapp: string | null
     plan: string; planExpiresAt: string | null; status: 'free' | 'active' | 'overdue'
-    profileCount: number; freeSecondsUsed: number; createdAt: string
+    profileCount: number; freeSecondsUsed: number; createdAt: string; isAdmin: boolean
   }
   interface MemberSummary { total: number; active: number; free: number; overdue: number; basic: number; premium: number }
   const [members, setMembers] = useState<Member[]>([])
@@ -589,6 +589,25 @@ export default function Admin() {
                                       className="text-xs px-2 py-1 rounded-lg"
                                       style={{ background: 'var(--surface-alt)', border: '1px solid var(--border)', color: 'var(--text-dim)', cursor: 'pointer' }}>
                                       🔑 Reset
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        const action = m.isAdmin ? 'remover admin de' : 'tornar admin'
+                                        if (!confirm(`Deseja ${action} ${m.name}?`)) return
+                                        api.admin.setAdmin(m.id, !m.isAdmin)
+                                          .then(() => {
+                                            alert(`${m.name} ${!m.isAdmin ? 'agora é admin 🛡️' : 'não é mais admin'}`)
+                                            setMembers(prev => prev.map(x => x.id === m.id ? { ...x, isAdmin: !m.isAdmin } : x))
+                                          })
+                                          .catch(e => alert(`Erro: ${e instanceof Error ? e.message : String(e)}`))
+                                      }}
+                                      className="text-xs px-2 py-1 rounded-lg"
+                                      style={{
+                                        background: m.isAdmin ? 'rgba(168,85,247,0.25)' : 'rgba(168,85,247,0.12)',
+                                        border: '1px solid rgba(168,85,247,0.3)',
+                                        color: 'var(--purple)', cursor: 'pointer'
+                                      }}>
+                                      🛡️ {m.isAdmin ? 'Admin ✓' : 'Admin'}
                                     </button>
                                   </div>
                                 </td>

@@ -17,14 +17,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
       SELECT
         u.id, u.name, u.email, u.whatsapp,
         u.plan, u.plan_expires_at, u.created_at,
-        u.free_seconds_used,
+        u.free_seconds_used, u.is_admin,
         COUNT(DISTINCT p.id) as profile_count
       FROM users u
       LEFT JOIN profiles p ON p.user_id = u.id
-      WHERE u.is_admin = 0
+      WHERE u.id != ?
       GROUP BY u.id
       ORDER BY u.created_at DESC
-    `).all()
+    `).bind(user.id).all()
 
     const now = new Date().toISOString()
 
@@ -51,6 +51,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
         profileCount: r.profile_count,
         freeSecondsUsed: r.free_seconds_used ?? 0,
         createdAt: r.created_at,
+        isAdmin: r.is_admin === 1,
       }
     })
 
