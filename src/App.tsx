@@ -15,6 +15,7 @@ import Admin from './pages/Admin'
 import Configuracoes from './pages/Configuracoes'
 import ForgotPassword from './pages/ForgotPassword'
 import Categoria from './pages/Categoria'
+import Landing from './pages/Landing'
 import Termos from './pages/Termos'
 import Privacidade from './pages/Privacidade'
 import AuthGate from './components/AuthGate'
@@ -31,6 +32,18 @@ function ChatWidget() {
       <SubscribeBanner />
     </>
   )
+}
+
+function LandingOrHome() {
+  const { user, isLoading } = useAuth()
+  if (isLoading) return (
+    <div className="fixed inset-0 flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+      <div className="w-10 h-10 rounded-full border-2 border-violet-600 border-t-transparent"
+        style={{ animation: 'spin 0.8s linear infinite' }} />
+    </div>
+  )
+  if (user) return <Navigate to="/home" replace />
+  return <Landing />
 }
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -58,7 +71,8 @@ export default function App() {
       <BrowserRouter>
         <ChatWidget />
         <Routes>
-          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/" element={<LandingOrHome />} />
+          <Route path="/pageone" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

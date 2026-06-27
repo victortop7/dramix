@@ -1,6 +1,11 @@
 import type { PagesFunction } from '@cloudflare/workers-types'
 import type { Env } from '../../lib/types'
 
+// Por quantos dias um drama recém-adicionado fica na fileira "Novos Na Plataforma"
+// e exibe o selo verde "NOVO". Depois disso some de "Novos" mas continua nas
+// demais categorias em que foi cadastrado.
+const NEW_DAYS = 5
+
 export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   try {
     const url = new URL(request.url)
@@ -19,14 +24,20 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     // Para cada categoria, buscar dramas
     const result = await Promise.all(
       (cats.results as { id: string; name: string; slug: string; sort_order: number }[]).map(async (cat) => {
+        // "Novos Na Plataforma": só mostra dramas cadastrados nos últimos NEW_DAYS dias.
+        const novosFilter = cat.slug === 'novos'
+          ? `AND d.created_at >= datetime('now', '-${NEW_DAYS} days')`
+          : ''
+
         const dramas = await env.DB.prepare(`
           SELECT d.*,
+            (d.created_at >= datetime('now', '-${NEW_DAYS} days')) AS is_recent,
             GROUP_CONCAT(c2.id || ':' || c2.name || ':' || c2.slug, '||') as cats_raw
           FROM drama_categories dc
           JOIN dramas d ON d.id = dc.drama_id
           LEFT JOIN drama_categories dc2 ON dc2.drama_id = d.id
           LEFT JOIN categories c2 ON c2.id = dc2.category_id
-          WHERE dc.category_id = ?
+          WHERE dc.category_id = ? ${novosFilter}
           GROUP BY d.id
           ORDER BY d.created_at DESC
           LIMIT 20
@@ -65,7 +76,7 @@ function mapDrama(d: Record<string, unknown>) {
     id: d.id, title: d.title, description: d.description,
     thumbnailUrl: d.thumbnail_url, videoUrl: d.video_url,
     durationSeconds: d.duration_seconds,
-    isDubbed: d.is_dubbed === 1, isNew: d.is_new === 1, isExclusive: d.is_exclusive === 1,
+    isDubbed: d.is_dubbed === 1, isNew: d.is_new === 1 && d.is_recent === 1, isExclusive: d.is_exclusive === 1,
     rating: d.rating, views: d.views, categories,
     createdAt: d.created_at,
   }
